@@ -564,6 +564,8 @@ function renderResults(data) {
           <button class="notes-toggle" onclick="toggleNotes(this)">✏️ Handwritten Notes ▼</button>
           <div class="hw-notes">${esc(j.handwrittenNotes)}</div>
         ` : ''}
+        <div class="jc-notes-label">📝 Your Field Notes</div>
+        <textarea class="jc-notes-input" id="note_${i}" placeholder="What happened at this job? e.g. found activity in roof cavity, placed 2 bait stations…"></textarea>
       </div>
     </div>`;
   });
@@ -612,23 +614,24 @@ async function generateReport() {
 
   let jobSummaries = [];
   jobCards.forEach((card, i) => {
-    const name = card.querySelector('.jc-name')?.textContent || '';
-    const address = card.querySelectorAll('.jc-field-val')[0]?.textContent || '';
-    const details = card.querySelector('.jc-details-box')?.textContent || '';
-    const fieldNote = notes[i]?.value || '';
-    jobSummaries.push(`Job ${i+1}: ${name} — ${address}
-Job type: ${details}
-Field notes: ${fieldNote || 'No notes added'}`);
+    const name = card.querySelector('.jc-name')?.textContent || 'Unknown';
+    const noteEl = document.getElementById('note_' + i);
+    const fieldNote = noteEl ? noteEl.value.trim() : '';
+    if (fieldNote) {
+      jobSummaries.push('Job ' + (i+1) + ' (' + name + '): ' + fieldNote);
+    }
   });
 
-  const prompt = `You are writing a casual end-of-day work report for a pest control technician named Brad to send to his boss.
+  if (jobSummaries.length === 0) {
+    document.getElementById('reportModal').classList.remove('hidden');
+    document.getElementById('reportContent').innerHTML = '<div class="generating-text">Add some field notes to at least one job first!</div>';
+    document.getElementById('copyBtn').style.display = 'none';
+    btn.disabled = false;
+    btn.innerHTML = '📋 Generate End-of-Day Report';
+    return;
+  }
 
-Date: ${date}
-Jobs completed today:
-
-${jobSummaries.join('\n\n')}
-
-Write a casual but professional end-of-day summary report. Keep it friendly and clear — like a text message to your boss but slightly more professional. Cover each job briefly, mention any important findings from the field notes, and end with a short overall summary. Use plain text only, no markdown formatting, no asterisks, no bullet symbols — just clean readable paragraphs. Address it as a report from Brad.`;
+  const prompt = 'You are writing a casual end-of-day work report for a pest control technician named Brad to send to his boss. Date: ' + date + '. Write a short, casual but clear summary based ONLY on these field notes Brad wrote today: ' + jobSummaries.join(' | ') + '. Keep it conversational — like a message from Brad to his boss. Plain text only, no bullet points, no asterisks, no formatting symbols. Just a few short paragraphs covering what happened at each job.';
 
   document.getElementById('reportModal').classList.remove('hidden');
   document.getElementById('reportContent').innerHTML = '<div class="generating-text">✍️ Writing your report…</div>';
