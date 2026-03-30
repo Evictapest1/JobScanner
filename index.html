@@ -190,6 +190,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(
 .toast.show { opacity: 1; }
 
 .hidden { display: none !important; }
+
+/* Nav picker */
+.nav-picker { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; display: flex; align-items: flex-end; }
+.nav-picker-sheet { background: #fff; width: 100%; border-radius: 24px 24px 0 0; padding: 20px 16px 40px; }
+.nav-picker-title { font-size: 13px; color: #94a3b8; text-align: center; margin-bottom: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+.nav-picker-address { font-size: 14px; color: var(--dark); text-align: center; font-weight: 600; margin-bottom: 20px; padding: 0 16px; }
+.nav-option { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: 10px; cursor: pointer; background: #fafafa; transition: all 0.15s; }
+.nav-option:active { background: #fde8e8; border-color: var(--red); }
+.nav-option-icon { font-size: 28px; }
+.nav-option-label { font-size: 16px; font-weight: 700; color: var(--dark); }
+.nav-option-sub { font-size: 12px; color: var(--mid); }
+.nav-cancel { width: 100%; padding: 14px; border-radius: 14px; border: none; background: #f1f5f9; color: var(--mid); font-size: 15px; font-weight: 700; font-family: 'DM Sans',sans-serif; cursor: pointer; margin-top: 4px; }
 .section-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
 </style>
 </head>
@@ -283,6 +295,27 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Nav picker -->
+<div class="nav-picker hidden" id="navPicker">
+  <div class="nav-picker-sheet">
+    <div class="nav-picker-title">Open in Maps</div>
+    <div class="nav-picker-address" id="navPickerAddress"></div>
+    <div class="nav-option" onclick="openNav('apple')">
+      <div class="nav-option-icon">🗺️</div>
+      <div><div class="nav-option-label">Apple Maps</div><div class="nav-option-sub">Open in Apple Maps</div></div>
+    </div>
+    <div class="nav-option" onclick="openNav('waze')">
+      <div class="nav-option-icon">🚗</div>
+      <div><div class="nav-option-label">Waze</div><div class="nav-option-sub">Open in Waze</div></div>
+    </div>
+    <div class="nav-option" onclick="openNav('google')">
+      <div class="nav-option-icon">📍</div>
+      <div><div class="nav-option-label">Google Maps</div><div class="nav-option-sub">Open in Google Maps</div></div>
+    </div>
+    <button class="nav-cancel" onclick="document.getElementById('navPicker').classList.add('hidden')">Cancel</button>
+  </div>
+</div>
 
 <script>
 // ── STATE ──────────────────────────────────────────────────
@@ -402,7 +435,6 @@ function renderDay(day) {
   // Job cards
   html += `<div class="section-label">Job Cards</div>`;
   jobs.forEach((j,i) => {
-    const mapsUrl = 'maps://?q=' + encodeURIComponent(j.address || '') + '&dirflg=d';
     html += `<div class="job-card">
       <div class="jc-header">
         <div>
@@ -767,6 +799,24 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+let navAddress = '';
+
+function showNavPicker(address) {
+  navAddress = address;
+  document.getElementById('navPickerAddress').textContent = address;
+  document.getElementById('navPicker').classList.remove('hidden');
+}
+
+function openNav(app) {
+  const enc = encodeURIComponent(navAddress);
+  let url = '';
+  if (app === 'apple') url = 'maps://?q=' + enc + '&dirflg=d';
+  if (app === 'waze') url = 'waze://?q=' + enc + '&navigate=yes';
+  if (app === 'google') url = 'https://maps.google.com/?q=' + enc;
+  window.location.href = url;
+  document.getElementById('navPicker').classList.add('hidden');
 }
 
 function esc(str) {
