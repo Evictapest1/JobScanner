@@ -199,6 +199,29 @@
   /* hidden */
   .hidden { display: none !important; }
 
+  /* Manual entry job block */
+  .manual-job-block {
+    background: var(--card); border-radius: 16px; padding: 16px;
+    margin-bottom: 14px; border: 1px solid var(--border);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .manual-job-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .manual-job-title { font-family: 'Syne', sans-serif; font-size: 15px; color: var(--dark); font-weight: 700; }
+  .manual-job-remove { background: none; border: none; color: #f87171; font-size: 18px; cursor: pointer; padding: 0 4px; }
+  .manual-field { margin-bottom: 10px; }
+  .manual-field label { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; display: block; margin-bottom: 4px; }
+  .manual-field input, .manual-field textarea {
+    width: 100%; padding: 9px 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: #fafafa;
+    font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--dark);
+    outline: none; transition: border 0.2s;
+  }
+  .manual-field input:focus, .manual-field textarea:focus { border-color: var(--green); background: #fff; }
+  .manual-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
   /* Field notes */
   .jc-notes-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; margin-top: 12px; }
   .jc-notes-input {
@@ -290,6 +313,38 @@
     📷 Scan / Upload Job Sheet
   </button>
   <div class="scan-hint">Take a photo, choose from camera roll, or upload a PDF</div>
+  <button class="scan-btn" onclick="showManualEntry()" style="margin-top:12px;background:transparent;border:2px solid rgba(255,255,255,0.2);box-shadow:none;">
+    ✏️ Enter Jobs Manually
+  </button>
+</div>
+
+<!-- MANUAL ENTRY -->
+<div id="manual-entry" class="hidden" style="min-height:100vh;background:var(--light);padding-bottom:80px;">
+  <div style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:20px 18px 16px;color:#fff;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;">
+    <div>
+      <div style="font-size:10px;opacity:0.6;letter-spacing:0.12em;text-transform:uppercase;">Evict-A-Pest</div>
+      <div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;">Manual Job Entry</div>
+    </div>
+    <button onclick="goHome()" style="background:rgba(255,255,255,0.15);border:none;border-radius:12px;padding:9px 16px;color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">✕ Cancel</button>
+  </div>
+
+  <div style="padding:16px;" id="manualJobsList"></div>
+
+  <div style="padding:0 16px 16px;">
+    <button onclick="addManualJob()" style="width:100%;padding:14px;border-radius:14px;border:2px dashed #e63329;background:transparent;color:#e63329;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">
+      + Add Another Job
+    </button>
+  </div>
+
+  <div style="padding:0 16px;">
+    <div style="margin-bottom:8px;">
+      <label style="font-size:11px;color:var(--mid);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;">Date</label>
+      <input id="manualDate" type="date" style="width:100%;margin-top:4px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#fafafa;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">
+    </div>
+    <button onclick="submitManualJobs()" style="width:100%;padding:18px;border-radius:16px;border:none;background:#e63329;color:#fff;font-size:17px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:4px;">
+      View My Jobs →
+    </button>
+  </div>
 </div>
 
 <!-- SCANNING -->
@@ -337,9 +392,9 @@ function submitKey() {
 window.addEventListener('load', () => { if (!getApiKey()) show('setup'); else show('home'); });
 
 function show(id) {
-  ['setup','home','scanning','error-screen','results'].forEach(s => {
+  ['setup','home','scanning','error-screen','results','manual-entry'].forEach(s => {
     const el = document.getElementById(s);
-    if (s === id) { el.classList.remove('hidden'); if (s === 'results') el.style.display = 'flex'; }
+    if (s === id) { el.classList.remove('hidden'); if (s === 'results') el.style.display = 'flex'; else el.style.display = ''; }
     else { el.classList.add('hidden'); if (s === 'results') el.style.display = 'none'; }
   });
 }
@@ -594,6 +649,85 @@ function toggleNotes(btn) {
   btn.textContent = notes.classList.contains('open')
     ? '✏️ Handwritten Notes ▲'
     : '✏️ Handwritten Notes ▼';
+}
+
+// ── MANUAL ENTRY ──────────────────────────────────────────
+let manualJobCount = 0;
+
+function showManualEntry() {
+  show('manual-entry');
+  document.getElementById('manualJobsList').innerHTML = '';
+  manualJobCount = 0;
+  addManualJob();
+  // Set today's date
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('manualDate').value = today;
+}
+
+function addManualJob() {
+  manualJobCount++;
+  const i = manualJobCount;
+  const div = document.createElement('div');
+  div.className = 'manual-job-block';
+  div.id = 'manualJob_' + i;
+  div.innerHTML = `
+    <div class="manual-job-header">
+      <div class="manual-job-title">Job ${i}</div>
+      ${i > 1 ? '<button class="manual-job-remove" onclick="removeManualJob(' + i + ')">✕</button>' : ''}
+    </div>
+    <div class="manual-field"><label>Customer Name</label><input id="mj_name_${i}" placeholder="e.g. John Smith"></div>
+    <div class="manual-field"><label>Address</label><input id="mj_address_${i}" placeholder="e.g. 12 Smith St, Parramatta"></div>
+    <div class="manual-field"><label>Phone</label><input id="mj_phone_${i}" placeholder=""></div>
+    <div class="manual-row">
+      <div class="manual-field"><label>Start Time</label><input id="mj_start_${i}" type="time"></div>
+      <div class="manual-field"><label>Finish Time</label><input id="mj_finish_${i}" type="time"></div>
+    </div>
+    <div class="manual-row">
+      <div class="manual-field"><label>Worker</label><input id="mj_worker_${i}" placeholder="e.g. Brad"></div>
+      <div class="manual-field"><label>Fee ($)</label><input id="mj_fee_${i}" placeholder="e.g. 200" type="number"></div>
+    </div>
+    <div class="manual-field"><label>Job Details</label><textarea id="mj_details_${i}" rows="2" placeholder="e.g. Termite Inspection $200 + GST"></textarea></div>
+  `;
+  document.getElementById('manualJobsList').appendChild(div);
+}
+
+function removeManualJob(i) {
+  const el = document.getElementById('manualJob_' + i);
+  if (el) el.remove();
+}
+
+function submitManualJobs() {
+  const date = document.getElementById('manualDate').value;
+  const jobs = [];
+  for (let i = 1; i <= manualJobCount; i++) {
+    const nameEl = document.getElementById('mj_name_' + i);
+    if (!nameEl) continue;
+    const name = nameEl.value.trim();
+    if (!name) continue;
+    const startVal = document.getElementById('mj_start_' + i).value;
+    const finishVal = document.getElementById('mj_finish_' + i).value;
+    jobs.push({
+      customerName: name,
+      address: document.getElementById('mj_address_' + i).value,
+      phone: document.getElementById('mj_phone_' + i).value,
+      start: startVal ? formatTime(startVal) : '',
+      finish: finishVal ? formatTime(finishVal) : '',
+      worker: document.getElementById('mj_worker_' + i).value,
+      feeCharged: document.getElementById('mj_fee_' + i).value,
+      jobDetails: document.getElementById('mj_details_' + i).value,
+      status: '', handwrittenNotes: ''
+    });
+  }
+  if (jobs.length === 0) { alert('Add at least one job!'); return; }
+  renderResults({ date, jobs, handwrittenNotes: '' });
+  show('results');
+}
+
+function formatTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':');
+  const hr = parseInt(h);
+  return (hr > 12 ? hr-12 : hr || 12) + ':' + m + ' ' + (hr >= 12 ? 'PM' : 'AM');
 }
 
 function esc(str) {
