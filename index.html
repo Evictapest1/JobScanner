@@ -7,18 +7,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --green: #2d6a4f;
-    --green-dark: #1a3a2a;
-    --green-light: #d1fae5;
-    --accent: #52b788;
+    --green: #e63329;
+    --green-dark: #1a1a1a;
+    --green-light: #fde8e8;
+    --accent: #ff6b65;
     --warn: #f59e0b;
     --warn-bg: #fffbeb;
     --warn-border: #fcd34d;
-    --dark: #0f172a;
-    --mid: #475569;
-    --light: #f1f5f9;
+    --dark: #1a1a1a;
+    --mid: #555555;
+    --light: #f4f4f4;
     --card: #ffffff;
-    --border: #e2e8f0;
+    --border: #e2e2e2;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
@@ -26,7 +26,7 @@
   /* ── HOME ── */
   #home {
     min-height: 100vh;
-    background: linear-gradient(160deg, #071810 0%, var(--green-dark) 55%, #0f172a 100%);
+    background: linear-gradient(160deg, #111111 0%, #1a1a1a 55%, #2a0a09 100%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 32px 24px; text-align: center;
   }
@@ -52,7 +52,7 @@
   /* ── SCANNING ── */
   #scanning {
     min-height: 100vh;
-    background: linear-gradient(160deg, #071810 0%, var(--green-dark) 100%);
+    background: linear-gradient(160deg, #111111 0%, #1a1a1a 100%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 16px; padding: 24px; text-align: center;
   }
@@ -84,7 +84,7 @@
   /* ── RESULTS ── */
   #results { display: none; flex-direction: column; min-height: 100vh; }
   .results-header {
-    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     padding: 20px 18px 18px; color: #fff;
     display: flex; justify-content: space-between; align-items: center;
     position: sticky; top: 0; z-index: 10;
@@ -117,8 +117,8 @@
     border: 1px solid var(--border);
   }
   .summary-header {
-    background: var(--dark); padding: 12px 16px;
-    color: #94a3b8; font-size: 11px; font-weight: 700;
+    background: #1a1a1a; padding: 12px 16px;
+    color: #aaaaaa; font-size: 11px; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase;
   }
   .summary-table { width: 100%; border-collapse: collapse; font-size: 13px; overflow-x: auto; display: block; }
@@ -130,7 +130,7 @@
   .summary-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
   .summary-table tr:last-child td { border-bottom: none; }
   .summary-table tr:nth-child(even) td { background: #fafafa; }
-  .tfoot-row td { background: var(--green-light) !important; font-weight: 800; color: var(--green); font-size: 15px; }
+  .tfoot-row td { background: #fde8e8 !important; font-weight: 800; color: #e63329; font-size: 15px; }
   .tfoot-label { text-align: right; color: var(--dark); font-size: 13px; }
 
   /* Section label */
@@ -147,7 +147,7 @@
     border: 1px solid var(--border);
   }
   .jc-header {
-    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     padding: 16px 18px; color: #fff;
     display: flex; justify-content: space-between; align-items: flex-start;
   }
@@ -164,11 +164,11 @@
   .jc-body { padding: 16px 18px; }
   .jc-time-row {
     display: flex; gap: 0; margin-bottom: 14px;
-    background: #f0fdf4; border-radius: 12px;
-    border: 1px solid #bbf7d0; overflow: hidden;
+    background: #fff5f5; border-radius: 12px;
+    border: 1px solid #fecaca; overflow: hidden;
   }
   .jc-time-cell { flex: 1; padding: 12px 14px; }
-  .jc-time-cell + .jc-time-cell { border-left: 1px solid #bbf7d0; }
+  .jc-time-cell + .jc-time-cell { border-left: 1px solid #fecaca; }
   .jc-time-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px; }
   .jc-time-val { font-size: 14px; font-weight: 700; color: var(--dark); }
 
@@ -204,11 +204,11 @@
 
 <!-- SETUP -->
 <div id="setup" class="hidden">
-  <div style="min-height:100vh;background:linear-gradient(160deg,#071810 0%,#1a3a2a 55%,#0f172a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center">
+  <div style="min-height:100vh;background:linear-gradient(160deg,#111111 0%,#1a1a1a 55%,#2a0a09 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center">
     <span style="font-size:52px;display:block;margin-bottom:16px">🔑</span>
     <div style="font-family:Syne,sans-serif;font-size:26px;color:#fff;margin-bottom:8px">API Key Setup</div>
     <div style="font-size:14px;color:#52b788;margin-bottom:32px">Enter your Anthropic API key to get started.<br>It stays on your device only.</div>
-    <input id="keyInput" type="password" placeholder="sk-ant-api03-..." style="width:100%;max-width:320px;padding:14px 16px;border-radius:14px;border:1px solid #2d6a4f;background:#0f2417;color:#fff;font-size:14px;font-family:DM Sans,sans-serif;margin-bottom:8px;outline:none">
+    <input id="keyInput" type="password" placeholder="sk-ant-api03-..." style="width:100%;max-width:320px;padding:14px 16px;border-radius:14px;border:1px solid #e63329;background:#1a1a1a;color:#fff;font-size:14px;font-family:DM Sans,sans-serif;margin-bottom:8px;outline:none">
     <div id="keyError" style="color:#f87171;font-size:12px;margin-bottom:12px;min-height:16px"></div>
     <button onclick="submitKey()" style="width:100%;max-width:320px;background:#2d6a4f;color:#fff;border:none;border-radius:16px;padding:18px;font-size:17px;font-weight:700;font-family:DM Sans,sans-serif;cursor:pointer">Save &amp; Continue</button>
   </div>
@@ -218,8 +218,9 @@
 <div id="home">
   <div class="logo-wrap">
     <span class="logo-icon">🐀</span>
-    <div class="logo-title">Evict-A-Pest</div>
-    <div class="logo-sub">Job Sheet Scanner</div>
+    <div class="logo-title">EVICT-A-PEST</div>
+    <div class="logo-sub">send your pests packing!</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:4px;letter-spacing:0.08em">JOB SHEET SCANNER</div>
   </div>
   <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none">
   <button class="scan-btn" onclick="document.getElementById('fileInput').click()">
