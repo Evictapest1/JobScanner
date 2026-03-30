@@ -198,6 +198,68 @@
 
   /* hidden */
   .hidden { display: none !important; }
+
+  /* Field notes */
+  .jc-notes-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; margin-top: 12px; }
+  .jc-notes-input {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: #fafafa;
+    font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--dark);
+    resize: none; outline: none; line-height: 1.5; min-height: 72px;
+    box-sizing: border-box; transition: border 0.2s;
+  }
+  .jc-notes-input:focus { border-color: var(--green); background: #fff; }
+  .jc-notes-input::placeholder { color: #b0b0b0; }
+
+  /* Generate report button */
+  .report-btn-wrap { padding: 8px 0 32px; }
+  .report-btn {
+    width: 100%; padding: 18px; border-radius: 16px; border: none;
+    background: var(--green); color: #fff; font-size: 17px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; letter-spacing: 0.01em;
+    box-shadow: 0 4px 20px rgba(230,51,41,0.35);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .report-btn:active { transform: scale(0.98); }
+  .report-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* Report modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; align-items: flex-end; z-index: 100;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .modal {
+    background: #fff; width: 100%; border-radius: 24px 24px 0 0;
+    max-height: 85vh; display: flex; flex-direction: column;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal-header {
+    padding: 20px 20px 16px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+  }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; color: var(--dark); }
+  .modal-close {
+    background: #f1f1f1; border: none; border-radius: 50%; width: 32px; height: 32px;
+    font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  .report-text {
+    font-size: 14px; line-height: 1.8; color: var(--dark); white-space: pre-wrap;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .copy-btn {
+    width: 100%; padding: 15px; border-radius: 14px; border: none;
+    background: var(--green); color: #fff; font-size: 16px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .copy-btn.copied { background: #16a34a; }
+  .generating-text { text-align: center; color: var(--mid); font-size: 15px; padding: 32px 0; }
 </style>
 </head>
 <body>
@@ -506,7 +568,22 @@ function renderResults(data) {
     </div>`;
   });
 
+  // Generate report button
+  html += `<div class="report-btn-wrap">
+    <button class="report-btn" id="reportBtn" onclick="generateReport()">
+      📋 Generate End-of-Day Report
+    </button>
+  </div>`;
+
   body.innerHTML = html;
+
+  // Re-attach stored notes if any
+  document.querySelectorAll('.jc-notes-input').forEach(ta => {
+    const idx = ta.getAttribute('data-job');
+    const saved = sessionStorage.getItem('note_' + idx);
+    if (saved) ta.value = saved;
+    ta.addEventListener('input', () => sessionStorage.setItem('note_' + idx, ta.value));
+  });
 }
 
 function toggleNotes(btn) {
@@ -520,6 +597,108 @@ function toggleNotes(btn) {
 function esc(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+let reportText = '';
+
+async function generateReport() {
+  const btn = document.getElementById('reportBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating…';
+
+  // Collect all job notes
+  const notes = document.querySelectorAll('.jc-notes-input');
+  const jobCards = document.querySelectorAll('.job-card');
+  const date = document.getElementById('sheetDate').textContent || 'today';
+
+  let jobSummaries = [];
+  jobCards.forEach((card, i) => {
+    const name = card.querySelector('.jc-name')?.textContent || '';
+    const address = card.querySelectorAll('.jc-field-val')[0]?.textContent || '';
+    const details = card.querySelector('.jc-details-box')?.textContent || '';
+    const fieldNote = notes[i]?.value || '';
+    jobSummaries.push(`Job ${i+1}: ${name} — ${address}
+Job type: ${details}
+Field notes: ${fieldNote || 'No notes added'}`);
+  });
+
+  const prompt = `You are writing a casual end-of-day work report for a pest control technician named Brad to send to his boss.
+
+Date: ${date}
+Jobs completed today:
+
+${jobSummaries.join('\n\n')}
+
+Write a casual but professional end-of-day summary report. Keep it friendly and clear — like a text message to your boss but slightly more professional. Cover each job briefly, mention any important findings from the field notes, and end with a short overall summary. Use plain text only, no markdown formatting, no asterisks, no bullet symbols — just clean readable paragraphs. Address it as a report from Brad.`;
+
+  document.getElementById('reportModal').classList.remove('hidden');
+  document.getElementById('reportContent').innerHTML = '<div class="generating-text">✍️ Writing your report…</div>';
+  document.getElementById('copyBtn').style.display = 'none';
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': getApiKey(),
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    reportText = data.content.map(b => b.text || '').join('');
+    document.getElementById('reportContent').innerHTML = `<div class="report-text">${reportText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+    document.getElementById('copyBtn').style.display = 'flex';
+  } catch(err) {
+    document.getElementById('reportContent').innerHTML = '<div class="generating-text">Something went wrong. Try again.</div>';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '📋 Generate End-of-Day Report';
+}
+
+function closeModal() {
+  document.getElementById('reportModal').classList.add('hidden');
+}
+
+async function copyReport() {
+  if (!reportText) return;
+  try {
+    await navigator.clipboard.writeText(reportText);
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = '📋 Copy to Clipboard'; btn.classList.remove('copied'); }, 2000);
+  } catch(e) {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = reportText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+}
 </script>
+<!-- Report Modal -->
+<div id="reportModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📋 End-of-Day Report</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="reportContent"><div class="generating-text">✍️ Writing your report…</div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="copy-btn" id="copyBtn" onclick="copyReport()">📋 Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
