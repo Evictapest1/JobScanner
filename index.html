@@ -402,7 +402,7 @@ function renderDay(day) {
   // Job cards
   html += `<div class="section-label">Job Cards</div>`;
   jobs.forEach((j,i) => {
-    const mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(j.address || '');
+    const mapsUrl = 'maps://?q=' + encodeURIComponent(j.address || '') + '&dirflg=d';
     html += `<div class="job-card">
       <div class="jc-header">
         <div>
