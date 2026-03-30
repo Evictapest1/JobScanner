@@ -690,7 +690,7 @@ async function generateReport(type) {
     const total = allDays.reduce((s,d) => s + (weekData[d].jobs||[]).reduce((ss,j) => ss+(parseFloat(j.feeCharged)||0),0), 0);
     const totalJobs = allDays.reduce((s,d) => s + (weekData[d].jobs||[]).length, 0);
 
-    const prompt = 'Write a casual weekly work summary from Brad to his boss. ' + totalJobs + ' jobs completed this week totalling $' + total + '. Daily breakdown: ' + weekSummary.join(' | ') + '. Keep it friendly and concise. Plain text only, no bullet points or asterisks.';
+    const prompt = 'Write a concise weekly job summary. Format it EXACTLY like this with no extra text:\n\nWeekly Summary\n\n[For each day with jobs:]\n[Day]\n• [Customer Name] — [Address]\n  [notes]\n\nWeek Total: $[amount] | [n] jobs\n\nUse this data: ' + totalJobs + ' jobs, $' + total + ' total. ' + weekSummary.join(' | ') + '. Plain text only, no markdown.';
     reportText = await callClaude(prompt);
     document.getElementById('reportContent').innerHTML = `<div class="report-text">${reportText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
     document.getElementById('copyBtn').style.display = 'block';
