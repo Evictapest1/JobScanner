@@ -6,570 +6,392 @@
 <title>Evict-A-Pest · Job Scanner</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --green: #e63329;
-    --green-dark: #1a1a1a;
-    --green-light: #fde8e8;
-    --accent: #ff6b65;
-    --warn: #f59e0b;
-    --warn-bg: #fffbeb;
-    --warn-border: #fcd34d;
-    --dark: #1a1a1a;
-    --mid: #555555;
-    --light: #f4f4f4;
-    --card: #ffffff;
-    --border: #e2e2e2;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
+:root {
+  --red: #e63329;
+  --dark: #1a1a1a;
+  --mid: #555;
+  --light: #f4f4f4;
+  --border: #e2e2e2;
+  --card: #fff;
+  --warn-bg: #fffbeb;
+  --warn-border: #fcd34d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
 
-  /* ── HOME ── */
-  #home {
-    min-height: 100vh;
-    background: linear-gradient(160deg, #111111 0%, #1a1a1a 55%, #2a0a09 100%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 32px 24px; text-align: center;
-  }
-  .logo-wrap { margin-bottom: 40px; }
-  .logo-icon { font-size: 56px; display: block; margin-bottom: 12px; filter: drop-shadow(0 4px 24px rgba(82,183,136,0.4)); }
-  .logo-title { font-family: 'Syne', sans-serif; font-size: 30px; color: #fff; letter-spacing: -0.02em; }
-  .logo-sub { font-size: 14px; color: var(--accent); margin-top: 6px; letter-spacing: 0.05em; }
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: block; }
+#loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(160deg,#111 0%,#1a1a1a 55%,#2a0a09 100%); padding: 32px 24px; text-align: center; }
 
-  .scan-btn {
-    width: 100%; max-width: 320px;
-    background: var(--green);
-    color: #fff; border: none; border-radius: 20px;
-    padding: 22px 32px; font-size: 18px; font-weight: 700;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer; letter-spacing: 0.01em;
-    box-shadow: 0 8px 40px rgba(45,106,79,0.5);
-    transition: transform 0.15s, box-shadow 0.15s;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-  }
-  .scan-btn:active { transform: scale(0.97); box-shadow: 0 4px 20px rgba(45,106,79,0.4); }
-  .scan-hint { color: rgba(255,255,255,0.4); font-size: 13px; margin-top: 14px; }
+/* ── LOGIN ── */
+.brand-title { font-family: 'Syne', sans-serif; font-size: 30px; color: #fff; letter-spacing: -0.01em; }
+.brand-red { color: var(--red); }
+.brand-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; letter-spacing: 0.08em; }
+.login-box { width: 100%; max-width: 320px; margin-top: 40px; }
+.login-input {
+  width: 100%; padding: 14px 16px; border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08);
+  color: #fff; font-size: 16px; font-family: 'DM Sans',sans-serif;
+  outline: none; margin-bottom: 12px; text-align: center; letter-spacing: 0.05em;
+}
+.login-input::placeholder { color: rgba(255,255,255,0.3); }
+.login-input:focus { border-color: var(--red); }
+.login-btn {
+  width: 100%; padding: 16px; border-radius: 14px; border: none;
+  background: var(--red); color: #fff; font-size: 17px; font-weight: 700;
+  font-family: 'DM Sans',sans-serif; cursor: pointer; margin-top: 4px;
+}
+.login-error { color: #f87171; font-size: 13px; margin-top: 8px; min-height: 20px; }
 
-  /* ── SCANNING ── */
-  #scanning {
-    min-height: 100vh;
-    background: linear-gradient(160deg, #111111 0%, #1a1a1a 100%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 16px; padding: 24px; text-align: center;
-  }
-  .scan-icon { font-size: 52px; animation: float 2s ease-in-out infinite; }
-  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-  .scan-title { font-family: 'Syne', sans-serif; font-size: 22px; color: #fff; }
-  .scan-desc { font-size: 14px; color: var(--accent); }
-  .dots { display: flex; gap: 8px; margin-top: 8px; }
-  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
-  .dot:nth-child(2) { animation-delay: 0.3s; }
-  .dot:nth-child(3) { animation-delay: 0.6s; }
-  @keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.2)} }
+/* ── MAIN APP ── */
+#appScreen { display: none; flex-direction: column; min-height: 100vh; }
+#appScreen.active { display: flex; }
 
-  /* ── ERROR ── */
-  #error-screen {
-    min-height: 100vh; background: var(--dark);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 16px; padding: 24px; text-align: center;
-  }
-  .err-icon { font-size: 52px; }
-  .err-msg { font-size: 16px; color: #fff; max-width: 280px; line-height: 1.5; }
-  .err-detail { font-size: 12px; color: #64748b; max-width: 300px; line-height: 1.5; }
-  .try-btn {
-    background: var(--green); color: #fff; border: none; border-radius: 14px;
-    padding: 14px 36px; font-size: 16px; font-weight: 700;
-    font-family: 'DM Sans', sans-serif; cursor: pointer; margin-top: 8px;
-  }
+.app-header {
+  background: var(--dark); padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.app-header-brand { font-family: 'Syne',sans-serif; font-size: 16px; color: var(--red); font-weight: 800; letter-spacing: 0.05em; }
+.app-header-sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.logout-btn { background: rgba(255,255,255,0.1); border: none; border-radius: 8px; padding: 6px 12px; color: rgba(255,255,255,0.6); font-size: 12px; font-family: 'DM Sans',sans-serif; cursor: pointer; }
+.user-chip { font-size: 12px; color: rgba(255,255,255,0.5); }
 
-  /* ── RESULTS ── */
-  #results { display: none; flex-direction: column; min-height: 100vh; }
-  .results-header {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    padding: 20px 18px 18px; color: #fff;
-    display: flex; justify-content: space-between; align-items: center;
-    position: sticky; top: 0; z-index: 10;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-  }
-  .results-header-left .eyebrow { font-size: 10px; opacity: 0.6; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
-  .results-header-left .title { font-family: 'Syne', sans-serif; font-size: 20px; }
-  .results-header-left .date { font-size: 12px; opacity: 0.7; margin-top: 2px; }
-  .rescan-btn {
-    background: rgba(255,255,255,0.15); border: none; border-radius: 12px;
-    padding: 9px 16px; color: #fff; font-size: 13px; font-weight: 600;
-    font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap;
-  }
+/* ── DAY TABS ── */
+.day-tabs-wrap { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); }
+.day-tabs { display: flex; overflow-x: auto; scrollbar-width: none; }
+.day-tabs::-webkit-scrollbar { display: none; }
+.day-tab {
+  flex-shrink: 0; padding: 10px 16px; font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.35); cursor: pointer;
+  border-bottom: 2px solid transparent; white-space: nowrap;
+  font-family: 'DM Sans',sans-serif; transition: all 0.2s;
+  position: relative;
+}
+.day-tab.active { color: var(--red); border-bottom-color: var(--red); }
+.day-tab .job-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--red); color: #fff; border-radius: 99px;
+  font-size: 10px; font-weight: 700; min-width: 16px; height: 16px;
+  padding: 0 4px; margin-left: 5px;
+}
+.day-tab.empty .job-count { background: rgba(255,255,255,0.15); }
 
-  .results-body { padding: 20px 16px 48px; flex: 1; }
+/* ── DAY CONTENT ── */
+.day-content { flex: 1; padding: 16px; padding-bottom: 100px; }
 
-  /* Notes banner */
-  .notes-banner {
-    background: var(--warn-bg); border: 1px dashed var(--warn-border);
-    border-radius: 14px; padding: 14px 16px; margin-bottom: 20px;
-  }
-  .notes-banner .nb-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #92400e; margin-bottom: 4px; }
-  .notes-banner .nb-text { font-size: 14px; color: #78350f; line-height: 1.6; }
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 48px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.empty-icon { font-size: 48px; }
+.empty-title { font-family: 'Syne',sans-serif; font-size: 20px; color: var(--dark); }
+.empty-sub { font-size: 14px; color: var(--mid); max-width: 260px; line-height: 1.5; }
+.action-btn {
+  width: 100%; max-width: 300px; padding: 16px; border-radius: 16px; border: none;
+  background: var(--red); color: #fff; font-size: 16px; font-weight: 700;
+  font-family: 'DM Sans',sans-serif; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 20px rgba(230,51,41,0.3);
+}
+.action-btn.outline { background: transparent; border: 2px solid var(--red); color: var(--red); box-shadow: none; }
 
-  /* Summary table */
-  .summary-card {
-    background: var(--card); border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    overflow: hidden; margin-bottom: 24px;
-    border: 1px solid var(--border);
-  }
-  .summary-header {
-    background: #1a1a1a; padding: 12px 16px;
-    color: #aaaaaa; font-size: 11px; font-weight: 700;
-    letter-spacing: 0.1em; text-transform: uppercase;
-  }
-  .summary-table { width: 100%; border-collapse: collapse; font-size: 13px; overflow-x: auto; display: block; }
-  .summary-table th {
-    padding: 9px 12px; text-align: left; color: #64748b;
-    font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--border); background: #f8fafc; white-space: nowrap;
-  }
-  .summary-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-  .summary-table tr:last-child td { border-bottom: none; }
-  .summary-table tr:nth-child(even) td { background: #fafafa; }
-  .tfoot-row td { background: #fde8e8 !important; font-weight: 800; color: #e63329; font-size: 15px; }
-  .tfoot-label { text-align: right; color: var(--dark); font-size: 13px; }
+/* ── SUMMARY TABLE ── */
+.summary-card { background: var(--card); border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 20px; border: 1px solid var(--border); }
+.summary-header { background: var(--dark); padding: 12px 16px; color: #aaa; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+.clear-day-btn { background: rgba(230,51,41,0.15); border: none; border-radius: 6px; padding: 4px 10px; color: var(--red); font-size: 11px; font-weight: 700; font-family: 'DM Sans',sans-serif; cursor: pointer; }
+.summary-table { width: 100%; border-collapse: collapse; font-size: 13px; display: block; overflow-x: auto; }
+.summary-table th { padding: 9px 12px; text-align: left; color: #64748b; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: #f8fafc; white-space: nowrap; }
+.summary-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.summary-table tr:nth-child(even) td { background: #fafafa; }
+.tfoot-row td { background: #fde8e8 !important; font-weight: 800; color: var(--red); font-size: 15px; }
+.tfoot-label { text-align: right; color: var(--dark); font-size: 13px; }
 
-  /* Section label */
-  .section-label {
-    font-size: 11px; font-weight: 700; color: #64748b;
-    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;
-  }
+/* ── JOB CARD ── */
+.job-card { background: var(--card); border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 16px; border: 1px solid var(--border); }
+.jc-header { background: linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%); padding: 16px 18px; color: #fff; display: flex; justify-content: space-between; align-items: flex-start; }
+.jc-num { font-size: 10px; opacity: 0.6; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; }
+.jc-name { font-family: 'Syne',sans-serif; font-size: 19px; line-height: 1.2; }
+.jc-phone { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+.jc-fee { background: rgba(255,255,255,0.18); border-radius: 12px; padding: 6px 12px; font-size: 17px; font-weight: 800; text-align: center; white-space: nowrap; flex-shrink: 0; }
+.jc-fee-sub { font-size: 9px; opacity: 0.7; letter-spacing: 0.05em; }
+.jc-body { padding: 16px 18px; }
+.jc-time-row { display: flex; margin-bottom: 14px; background: #fff5f5; border-radius: 12px; border: 1px solid #fecaca; overflow: hidden; }
+.jc-time-cell { flex: 1; padding: 12px 14px; }
+.jc-time-cell + .jc-time-cell { border-left: 1px solid #fecaca; }
+.jc-time-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px; }
+.jc-time-val { font-size: 14px; font-weight: 700; color: var(--dark); }
+.jc-field { margin-bottom: 12px; }
+.jc-field-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+.jc-field-val { font-size: 14px; color: var(--dark); line-height: 1.5; }
+.jc-details-box { background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.6; color: #78350f; }
+.jc-notes-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; margin-top: 12px; }
+.jc-notes-input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #fafafa; font-size: 14px; font-family: 'DM Sans',sans-serif; color: var(--dark); resize: none; outline: none; line-height: 1.5; min-height: 72px; box-sizing: border-box; transition: border 0.2s; }
+.jc-notes-input:focus { border-color: var(--red); background: #fff; }
+.jc-notes-input::placeholder { color: #b0b0b0; }
 
-  /* Job card */
-  .job-card {
-    background: var(--card); border-radius: 18px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    overflow: hidden; margin-bottom: 16px;
-    border: 1px solid var(--border);
-  }
-  .jc-header {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    padding: 16px 18px; color: #fff;
-    display: flex; justify-content: space-between; align-items: flex-start;
-  }
-  .jc-num { font-size: 10px; opacity: 0.6; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; }
-  .jc-name { font-family: 'Syne', sans-serif; font-size: 19px; line-height: 1.2; }
-  .jc-phone { font-size: 12px; opacity: 0.8; margin-top: 4px; }
-  .jc-fee {
-    background: rgba(255,255,255,0.18); border-radius: 12px;
-    padding: 6px 12px; font-size: 17px; font-weight: 800;
-    text-align: center; white-space: nowrap; flex-shrink: 0;
-  }
-  .jc-fee-sub { font-size: 9px; opacity: 0.7; letter-spacing: 0.05em; }
+/* ── BOTTOM BAR ── */
+.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--dark); padding: 10px 14px; display: flex; gap: 8px; z-index: 50; box-shadow: 0 -2px 20px rgba(0,0,0,0.3); }
+.bar-btn { flex: 1; padding: 12px 8px; border-radius: 12px; border: none; font-size: 13px; font-weight: 700; font-family: 'DM Sans',sans-serif; cursor: pointer; transition: all 0.15s; text-align: center; }
+.bar-btn.red { background: var(--red); color: #fff; }
+.bar-btn.ghost { background: rgba(255,255,255,0.1); color: #fff; }
+.bar-btn.outline { background: transparent; border: 1px solid rgba(230,51,41,0.5); color: var(--red); }
+.bar-btn:active { transform: scale(0.97); }
 
-  .jc-body { padding: 16px 18px; }
-  .jc-time-row {
-    display: flex; gap: 0; margin-bottom: 14px;
-    background: #fff5f5; border-radius: 12px;
-    border: 1px solid #fecaca; overflow: hidden;
-  }
-  .jc-time-cell { flex: 1; padding: 12px 14px; }
-  .jc-time-cell + .jc-time-cell { border-left: 1px solid #fecaca; }
-  .jc-time-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px; }
-  .jc-time-val { font-size: 14px; font-weight: 700; color: var(--dark); }
+/* ── SCANNING OVERLAY ── */
+.scanning-overlay { position: fixed; inset: 0; background: linear-gradient(160deg,#111 0%,#1a1a1a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 200; text-align: center; padding: 24px; }
+.scan-icon { font-size: 52px; animation: float 2s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.scan-title { font-family: 'Syne',sans-serif; font-size: 22px; color: #fff; }
+.scan-desc { font-size: 14px; color: #ff6b65; }
+.dots { display: flex; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #ff6b65; animation: pulse 1.2s ease-in-out infinite; }
+.dot:nth-child(2){animation-delay:.3s} .dot:nth-child(3){animation-delay:.6s}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 
-  .jc-field { margin-bottom: 12px; }
-  .jc-field-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
-  .jc-field-val { font-size: 14px; color: var(--dark); line-height: 1.5; }
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: flex-end; z-index: 100; }
+.modal { background: #fff; width: 100%; border-radius: 24px 24px 0 0; max-height: 85vh; display: flex; flex-direction: column; }
+.modal-header { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.modal-title { font-family: 'Syne',sans-serif; font-size: 18px; color: var(--dark); }
+.modal-close { background: #f1f1f1; border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; }
+.modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid var(--border); flex-shrink: 0; display: flex; gap: 8px; }
+.report-text { font-size: 14px; line-height: 1.8; color: var(--dark); white-space: pre-wrap; }
+.generating-text { text-align: center; color: var(--mid); font-size: 15px; padding: 32px 0; }
+.copy-btn { flex: 1; padding: 14px; border-radius: 12px; border: none; background: var(--red); color: #fff; font-size: 15px; font-weight: 700; font-family: 'DM Sans',sans-serif; cursor: pointer; }
+.copy-btn.copied { background: #16a34a; }
 
-  .jc-details-box {
-    background: var(--warn-bg); border: 1px solid var(--warn-border);
-    border-radius: 10px; padding: 10px 12px;
-    font-size: 14px; line-height: 1.6; color: #78350f;
-  }
+/* ── MANUAL ENTRY MODAL ── */
+.manual-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; z-index: 150; }
+.manual-sheet { background: var(--light); width: 100%; border-radius: 24px 24px 0 0; max-height: 92vh; display: flex; flex-direction: column; }
+.manual-header { background: var(--dark); padding: 18px 18px 14px; border-radius: 24px 24px 0 0; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
+.manual-header-title { font-family: 'Syne',sans-serif; font-size: 18px; color: #fff; }
+.manual-close { background: rgba(255,255,255,0.1); border: none; border-radius: 8px; padding: 6px 12px; color: #fff; font-size: 13px; cursor: pointer; font-family: 'DM Sans',sans-serif; }
+.manual-body { overflow-y: auto; flex: 1; padding: 16px; }
+.manual-footer { padding: 12px 16px; background: #fff; border-top: 1px solid var(--border); flex-shrink: 0; display: flex; gap: 8px; }
+.manual-job-block { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
+.manual-job-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.manual-job-lbl { font-family: 'Syne',sans-serif; font-size: 14px; font-weight: 700; }
+.rm-btn { background: none; border: none; color: #f87171; font-size: 18px; cursor: pointer; }
+.mf { margin-bottom: 8px; }
+.mf label { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; display: block; margin-bottom: 3px; }
+.mf input, .mf textarea { width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: #fafafa; font-size: 14px; font-family: 'DM Sans',sans-serif; color: var(--dark); outline: none; }
+.mf input:focus, .mf textarea:focus { border-color: var(--red); background: #fff; }
+.mf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.add-job-btn { width: 100%; padding: 12px; border-radius: 12px; border: 2px dashed var(--red); background: transparent; color: var(--red); font-size: 14px; font-weight: 700; font-family: 'DM Sans',sans-serif; cursor: pointer; margin-bottom: 12px; }
 
-  .notes-toggle {
-    background: none; border: 1px solid var(--border); border-radius: 8px;
-    padding: 7px 12px; font-size: 12px; color: var(--mid);
-    cursor: pointer; font-family: 'DM Sans', sans-serif;
-    display: flex; align-items: center; gap: 6px; margin-top: 4px;
-  }
-  .hw-notes {
-    margin-top: 8px; background: #fafafa; border: 1px dashed var(--border);
-    border-radius: 10px; padding: 10px 12px;
-    font-size: 13px; color: #374151; line-height: 1.6; font-style: italic;
-    display: none;
-  }
-  .hw-notes.open { display: block; }
+/* ── TOAST ── */
+.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--dark); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+.toast.show { opacity: 1; }
 
-  /* hidden */
-  .hidden { display: none !important; }
-
-  /* Manual entry job block */
-  .manual-job-block {
-    background: var(--card); border-radius: 16px; padding: 16px;
-    margin-bottom: 14px; border: 1px solid var(--border);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-  }
-  .manual-job-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
-  }
-  .manual-job-title { font-family: 'Syne', sans-serif; font-size: 15px; color: var(--dark); font-weight: 700; }
-  .manual-job-remove { background: none; border: none; color: #f87171; font-size: 18px; cursor: pointer; padding: 0 4px; }
-  .manual-field { margin-bottom: 10px; }
-  .manual-field label { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; display: block; margin-bottom: 4px; }
-  .manual-field input, .manual-field textarea {
-    width: 100%; padding: 9px 12px; border-radius: 10px;
-    border: 1px solid var(--border); background: #fafafa;
-    font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--dark);
-    outline: none; transition: border 0.2s;
-  }
-  .manual-field input:focus, .manual-field textarea:focus { border-color: var(--green); background: #fff; }
-  .manual-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-  /* Field notes */
-  .jc-notes-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; margin-top: 12px; }
-  .jc-notes-input {
-    width: 100%; padding: 10px 12px; border-radius: 10px;
-    border: 1px solid var(--border); background: #fafafa;
-    font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--dark);
-    resize: none; outline: none; line-height: 1.5; min-height: 72px;
-    box-sizing: border-box; transition: border 0.2s;
-  }
-  .jc-notes-input:focus { border-color: var(--green); background: #fff; }
-  .jc-notes-input::placeholder { color: #b0b0b0; }
-
-  /* Generate report button */
-  .report-btn-wrap { padding: 8px 0 32px; }
-  .report-btn {
-    width: 100%; padding: 18px; border-radius: 16px; border: none;
-    background: var(--green); color: #fff; font-size: 17px; font-weight: 700;
-    font-family: 'DM Sans', sans-serif; cursor: pointer; letter-spacing: 0.01em;
-    box-shadow: 0 4px 20px rgba(230,51,41,0.35);
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .report-btn:active { transform: scale(0.98); }
-  .report-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  /* Report modal */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-    display: flex; align-items: flex-end; z-index: 100;
-    animation: fadeIn 0.2s ease;
-  }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .modal {
-    background: #fff; width: 100%; border-radius: 24px 24px 0 0;
-    max-height: 85vh; display: flex; flex-direction: column;
-    animation: slideUp 0.3s ease;
-  }
-  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-  .modal-header {
-    padding: 20px 20px 16px; border-bottom: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
-  }
-  .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; color: var(--dark); }
-  .modal-close {
-    background: #f1f1f1; border: none; border-radius: 50%; width: 32px; height: 32px;
-    font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  }
-  .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
-  .report-text {
-    font-size: 14px; line-height: 1.8; color: var(--dark); white-space: pre-wrap;
-    font-family: 'DM Sans', sans-serif;
-  }
-  .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
-  .copy-btn {
-    width: 100%; padding: 15px; border-radius: 14px; border: none;
-    background: var(--green); color: #fff; font-size: 16px; font-weight: 700;
-    font-family: 'DM Sans', sans-serif; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .copy-btn.copied { background: #16a34a; }
-  .generating-text { text-align: center; color: var(--mid); font-size: 15px; padding: 32px 0; }
+.hidden { display: none !important; }
+.section-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
 </style>
 </head>
 <body>
 
-<!-- SETUP -->
-<div id="setup" class="hidden">
-  <div style="min-height:100vh;background:linear-gradient(160deg,#111111 0%,#1a1a1a 55%,#2a0a09 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center">
-    <div style="margin-bottom:24px"><div style="font-family:Syne,sans-serif;font-size:28px;color:#e63329;font-weight:800;letter-spacing:0.05em">EVICT-A-PEST</div><div style="font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:0.05em;margin-top:2px">send your pests packing!</div></div>
-    <span style="font-size:52px;display:block;margin-bottom:16px">🔑</span>
-    <div style="font-family:Syne,sans-serif;font-size:26px;color:#fff;margin-bottom:8px">API Key Setup</div>
-    <div style="font-size:14px;color:#52b788;margin-bottom:32px">Enter your Anthropic API key to get started.<br>It stays on your device only.</div>
-    <input id="keyInput" type="password" placeholder="sk-ant-api03-..." style="width:100%;max-width:320px;padding:14px 16px;border-radius:14px;border:1px solid #e63329;background:#1a1a1a;color:#fff;font-size:14px;font-family:DM Sans,sans-serif;margin-bottom:8px;outline:none">
-    <div id="keyError" style="color:#f87171;font-size:12px;margin-bottom:12px;min-height:16px"></div>
-    <button onclick="submitKey()" style="width:100%;max-width:320px;background:#e63329;color:#fff;border:none;border-radius:16px;padding:18px;font-size:17px;font-weight:700;font-family:DM Sans,sans-serif;cursor:pointer">Save &amp; Continue</button>
+<!-- ── LOGIN ── -->
+<div id="loginScreen" class="screen active">
+  <div style="font-size:56px;margin-bottom:16px;">🐀</div>
+  <div class="brand-title">EVICT-<span class="brand-red">A</span>-PEST</div>
+  <div class="brand-sub">JOB SHEET SCANNER</div>
+  <div class="login-box">
+    <input class="login-input" id="loginName" placeholder="Your name" autocomplete="off">
+    <input class="login-input" id="loginPin" type="password" inputmode="numeric" placeholder="PIN" maxlength="6">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="loginError"></div>
+    <div style="margin-top:24px;font-size:12px;color:rgba(255,255,255,0.2);">First time? Any name + PIN sets your credentials.</div>
   </div>
 </div>
 
-<!-- HOME -->
-<div id="home">
-  <div class="logo-wrap">
-    <span class="logo-icon">🐀</span>
-    <div class="logo-title">EVICT-A-PEST</div>
-    <div class="logo-sub">send your pests packing!</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:4px;letter-spacing:0.08em">JOB SHEET SCANNER</div>
-  </div>
-  <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none">
-  <button class="scan-btn" onclick="document.getElementById('fileInput').click()">
-    📷 Scan / Upload Job Sheet
-  </button>
-  <div class="scan-hint">Take a photo, choose from camera roll, or upload a PDF</div>
-  <button class="scan-btn" onclick="showManualEntry()" style="margin-top:12px;background:transparent;border:2px solid rgba(255,255,255,0.2);box-shadow:none;">
-    ✏️ Enter Jobs Manually
-  </button>
-</div>
-
-<!-- MANUAL ENTRY -->
-<div id="manual-entry" class="hidden" style="min-height:100vh;background:var(--light);padding-bottom:80px;">
-  <div style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:20px 18px 16px;color:#fff;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;">
+<!-- ── MAIN APP ── -->
+<div id="appScreen" class="screen">
+  <div class="app-header">
     <div>
-      <div style="font-size:10px;opacity:0.6;letter-spacing:0.12em;text-transform:uppercase;">Evict-A-Pest</div>
-      <div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;">Manual Job Entry</div>
+      <div class="app-header-brand">EVICT-A-PEST</div>
+      <div class="app-header-sub">Job Sheet Scanner</div>
     </div>
-    <button onclick="goHome()" style="background:rgba(255,255,255,0.15);border:none;border-radius:12px;padding:9px 16px;color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">✕ Cancel</button>
+    <div class="header-right">
+      <span class="user-chip" id="userChip"></span>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
   </div>
 
-  <div style="padding:16px;" id="manualJobsList"></div>
-
-  <div style="padding:0 16px 16px;">
-    <button onclick="addManualJob()" style="width:100%;padding:14px;border-radius:14px;border:2px dashed #e63329;background:transparent;color:#e63329;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">
-      + Add Another Job
-    </button>
+  <div class="day-tabs-wrap">
+    <div class="day-tabs" id="dayTabs"></div>
   </div>
 
-  <div style="padding:0 16px;">
-    <div style="margin-bottom:8px;">
-      <label style="font-size:11px;color:var(--mid);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;">Date</label>
-      <input id="manualDate" type="date" style="width:100%;margin-top:4px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#fafafa;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">
-    </div>
-    <button onclick="submitManualJobs()" style="width:100%;padding:18px;border-radius:16px;border:none;background:#e63329;color:#fff;font-size:17px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:4px;">
-      View My Jobs →
-    </button>
+  <div class="day-content" id="dayContent"></div>
+
+  <div class="bottom-bar">
+    <button class="bar-btn ghost" onclick="showManualModal()">✏️ Manual</button>
+    <button class="bar-btn ghost" onclick="triggerScan()">📄 Scan PDF</button>
+    <button class="bar-btn red" onclick="generateReport('day')">📋 Day Report</button>
+    <button class="bar-btn outline" onclick="generateReport('week')">📊 Week</button>
   </div>
 </div>
 
-<!-- SCANNING -->
-<div id="scanning" class="hidden">
+<!-- Hidden file input -->
+<input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none">
+
+<!-- Scanning overlay -->
+<div id="scanningOverlay" class="scanning-overlay hidden">
   <div class="scan-icon">🔍</div>
-  <div class="scan-title">Reading your job sheet…</div>
-  <div class="scan-desc">Reading your job sheet…</div>
-  <div class="dots">
-    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-  </div>
+  <div class="scan-title">Reading job sheet…</div>
+  <div class="scan-desc">Compressing & sending to Claude</div>
+  <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
 </div>
 
-<!-- ERROR -->
-<div id="error-screen" class="hidden">
-  <div class="err-icon">😕</div>
-  <div class="err-msg" id="errMsg">Couldn't read the job sheet.</div>
-  <div class="err-detail" id="errDetail"></div>
-  <button class="try-btn" onclick="goHome()">Try Again</button>
-</div>
-
-<!-- RESULTS -->
-<div id="results">
-  <div class="results-header">
-    <div class="results-header-left">
-      <div class="eyebrow">Evict-A-Pest</div>
-      <div class="title">Today's Jobs</div>
-      <div class="date" id="sheetDate"></div>
+<!-- Report modal -->
+<div id="reportModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="reportModalTitle">Report</div>
+      <button class="modal-close" onclick="closeModal('reportModal')">✕</button>
     </div>
-    <button class="rescan-btn" onclick="goHome()">📷 Rescan</button>
+    <div class="modal-body"><div id="reportContent" class="generating-text">Generating…</div></div>
+    <div class="modal-footer">
+      <button class="copy-btn" id="copyBtn" onclick="copyReport()">📋 Copy to Clipboard</button>
+    </div>
   </div>
-  <div class="results-body" id="resultsBody"></div>
 </div>
+
+<!-- Manual entry modal -->
+<div id="manualModal" class="manual-modal hidden">
+  <div class="manual-sheet">
+    <div class="manual-header">
+      <div class="manual-header-title">Enter Jobs Manually</div>
+      <button class="manual-close" onclick="closeModal('manualModal')">✕ Cancel</button>
+    </div>
+    <div class="manual-body">
+      <div class="mf" style="margin-bottom:14px;">
+        <label>Date for these jobs</label>
+        <input id="manualDate" type="date">
+      </div>
+      <div id="manualJobsList"></div>
+      <button class="add-job-btn" onclick="addManualJob()">+ Add Another Job</button>
+    </div>
+    <div class="manual-footer">
+      <button class="bar-btn ghost" style="flex:1" onclick="closeModal('manualModal')">Cancel</button>
+      <button class="bar-btn red" style="flex:2" onclick="submitManualJobs()">Add to Day →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-function getApiKey() { return localStorage.getItem('eap_api_key') || ''; }
-function saveApiKey(k) { localStorage.setItem('eap_api_key', k); }
+// ── STATE ──────────────────────────────────────────────────
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const USERS = JSON.parse(localStorage.getItem('eap_users') || '{}');
+let currentUser = null;
+let weekData = {}; // { Monday: { date, jobs: [{...}], notes: {0:'',1:''} } }
+let currentDay = 'Monday';
+let manualJobCount = 0;
+let reportText = '';
 
-function submitKey() {
-  const val = document.getElementById('keyInput').value.trim();
-  if (!val.startsWith('sk-ant-')) { document.getElementById('keyError').textContent = 'Key should start with sk-ant-'; return; }
-  saveApiKey(val);
-  show('home');
-}
+// ── AUTH ───────────────────────────────────────────────────
+function doLogin() {
+  const name = document.getElementById('loginName').value.trim();
+  const pin = document.getElementById('loginPin').value.trim();
+  if (!name || !pin) { document.getElementById('loginError').textContent = 'Enter your name and PIN.'; return; }
 
-window.addEventListener('load', () => { if (!getApiKey()) show('setup'); else show('home'); });
-
-function show(id) {
-  ['setup','home','scanning','error-screen','results','manual-entry'].forEach(s => {
-    const el = document.getElementById(s);
-    if (s === id) { el.classList.remove('hidden'); if (s === 'results') el.style.display = 'flex'; else el.style.display = ''; }
-    else { el.classList.add('hidden'); if (s === 'results') el.style.display = 'none'; }
-  });
-}
-
-function goHome() { show('home'); document.getElementById('fileInput').value = ''; }
-
-// Compress image using canvas
-function compressImage(file, maxWidth = 2400, quality = 0.92) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const scale = Math.min(1, maxWidth / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      canvas.toBlob(blob => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      }, 'image/jpeg', quality);
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-document.getElementById('fileInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  show('scanning');
-
-  try {
-    const isPdf = file.type === 'application/pdf';
-    const base64 = isPdf ? await fileToBase64(file) : await compressImage(file);
-    const mediaType = isPdf ? 'application/pdf' : 'image/jpeg';
-    const contentBlock = isPdf
-      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }
-      : { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } };
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': getApiKey(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'pdfs-2024-09-25',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 2000,
-        messages: [{
-          role: 'user',
-          content: [
-            contentBlock,
-            { type: 'text', text: `You are reading a job schedule sheet for Evict-A-Pest, a pest control company. This may be a PDF or a photo of a printed sheet., a pest control company. The sheet is a printed table with these exact columns in order from left to right:
-
-1. Start (date + time, e.g. "30/03/2026 8:45:00 AM")
-2. Finish (date + time, e.g. "30/03/2026 9:45:00 AM")
-3. Customer Name (may include nickname in brackets)
-4. Phone (may have multiple numbers labelled D: for daytime and M: for mobile)
-5. Workers (first name of the pest technician assigned)
-6. Status (may be blank)
-7. Fee Charged (a dollar amount like 200, 300, 480)
-8. Customer Details (the street address of the job)
-9. Job Details (description of the work: inspection type, pest type, price breakdown, special notes)
-
-There may also be handwritten notes on the page that are NOT part of the printed table.
-
-Return ONLY a valid JSON object, no markdown, no explanation, no backticks:
-{
-  "date": "the date shown on the sheet e.g. 30/03/2026",
-  "handwrittenNotes": "any handwritten text not in the printed table rows",
-  "jobs": [
-    {
-      "customerName": "full name from Customer Name column",
-      "phone": "all phone numbers shown, preserve labels like D: and M:",
-      "address": "full address from Customer Details column - this is the location of the job, NOT a date",
-      "start": "time only from Start column e.g. 8:45 AM",
-      "finish": "time only from Finish column e.g. 9:45 AM",
-      "worker": "name from Workers column",
-      "feeCharged": "number only from Fee Charged column e.g. 200",
-      "jobDetails": "full text from Job Details column including pest type, inspection type, price, any notes",
-      "status": "text from Status column or empty string",
-      "handwrittenNotes": "any handwritten notes scribbled near this specific job row"
-    }
-  ]
-}
-
-CRITICAL RULES:
-- Read every single character carefully — names and addresses must be exact
-- The address field must contain the STREET ADDRESS from the Customer Details column - never a date or time
-- Start and finish should be TIME ONLY, strip the date portion e.g. "8:45 AM" not "30/03/2026 8:45 AM"
-- feeCharged is a plain number only, no dollar sign, no GST text e.g. "200" not "$200 + GST"
-- Extract EVERY job row in the table, do not skip any
-- Empty string for any missing fields, never null
-- Do not confuse columns - Customer Details = street address, Job Details = work description
-- For customer names, read carefully letter by letter — do not guess or approximate
-- For addresses, include full street number, street name, suburb
-- The sheet may be rotated — read it in whatever orientation makes the text readable` }
-          ]
-        }]
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || data.error) {
-      throw new Error(data.error?.message || `API error ${response.status}`);
-    }
-
-    const text = data.content.map(b => b.text || '').join('');
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON in response');
-
-    const parsed = JSON.parse(jsonMatch[0]);
-    renderResults(parsed);
-    show('results');
-
-  } catch (err) {
-    document.getElementById('errMsg').textContent = 'Couldn\'t read the job sheet.';
-    document.getElementById('errDetail').textContent = err.message || '';
-    show('error-screen');
+  if (USERS[name]) {
+    if (USERS[name] !== pin) { document.getElementById('loginError').textContent = 'Incorrect PIN.'; return; }
+  } else {
+    USERS[name] = pin;
+    localStorage.setItem('eap_users', JSON.stringify(USERS));
   }
-});
 
-function renderResults(data) {
-  const jobs = data.jobs || [];
-  const body = document.getElementById('resultsBody');
-  document.getElementById('sheetDate').textContent = data.date || '';
+  currentUser = name;
+  // Load this user's week data
+  weekData = JSON.parse(localStorage.getItem('eap_week_' + name) || '{}');
+  document.getElementById('userChip').textContent = '👤 ' + name;
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  buildTabs();
+  renderDay(currentDay);
+}
 
+function doLogout() {
+  saveWeek();
+  currentUser = null;
+  weekData = {};
+  document.getElementById('loginScreen').classList.add('active');
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginName').value = '';
+  document.getElementById('loginPin').value = '';
+  document.getElementById('loginError').textContent = '';
+}
+
+document.getElementById('loginPin').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ── TABS ───────────────────────────────────────────────────
+function buildTabs() {
+  const wrap = document.getElementById('dayTabs');
+  wrap.innerHTML = '';
+  DAYS.forEach(day => {
+    const jobs = (weekData[day] && weekData[day].jobs) ? weekData[day].jobs.length : 0;
+    const tab = document.createElement('div');
+    tab.className = 'day-tab' + (day === currentDay ? ' active' : '') + (jobs === 0 ? ' empty' : '');
+    tab.innerHTML = day.slice(0,3) + (jobs > 0 ? ` <span class="job-count">${jobs}</span>` : '');
+    tab.onclick = () => switchDay(day);
+    wrap.appendChild(tab);
+  });
+}
+
+function switchDay(day) {
+  saveNotes();
+  currentDay = day;
+  buildTabs();
+  renderDay(day);
+}
+
+// ── RENDER DAY ─────────────────────────────────────────────
+function renderDay(day) {
+  const body = document.getElementById('dayContent');
+  const dayD = weekData[day];
+
+  if (!dayD || !dayD.jobs || dayD.jobs.length === 0) {
+    body.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">${day}</div>
+        <div class="empty-sub">No jobs loaded yet. Scan a PDF or enter jobs manually.</div>
+      </div>`;
+    return;
+  }
+
+  const jobs = dayD.jobs;
+  const notes = dayD.notes || {};
+  const total = jobs.reduce((s,j) => s + (parseFloat(j.feeCharged)||0), 0);
   let html = '';
 
-  // Global handwritten notes
-  if (data.handwrittenNotes) {
-    html += `<div class="notes-banner">
-      <div class="nb-label">✏️ Sheet Notes</div>
-      <div class="nb-text">${esc(data.handwrittenNotes)}</div>
-    </div>`;
-  }
-
   // Summary table
-  const total = jobs.reduce((s, j) => s + (parseFloat(j.feeCharged) || 0), 0);
   html += `<div class="summary-card">
-    <div class="summary-header">📋 Day Summary — ${jobs.length} Job${jobs.length !== 1 ? 's' : ''}</div>
+    <div class="summary-header">
+      <span>📋 ${day} — ${jobs.length} Job${jobs.length!==1?'s':''} ${dayD.date ? '· '+dayD.date : ''}</span>
+      <button class="clear-day-btn" onclick="clearDay('${day}')">Clear Day</button>
+    </div>
     <div style="overflow-x:auto">
     <table class="summary-table">
-      <thead><tr>
-        <th>#</th><th>Customer</th><th>Start</th><th>Job</th><th>Fee</th>
-      </tr></thead>
+      <thead><tr><th>#</th><th>Customer</th><th>Start</th><th>Job</th><th>Fee</th></tr></thead>
       <tbody>`;
 
-  jobs.forEach((j, i) => {
-    const shortJob = j.jobDetails ? j.jobDetails.split(' ').slice(0,5).join(' ') + '…' : '—';
-    const startShort = j.start ? j.start.replace(/:00$/, '').replace(/:\d{2}$/, '') : '—';
+  jobs.forEach((j,i) => {
+    const shortJob = j.jobDetails ? j.jobDetails.split(' ').slice(0,4).join(' ')+'…' : '—';
+    const startShort = j.start ? j.start.replace(/:\d{2}$/,'') : '—';
     html += `<tr>
       <td style="color:#94a3b8;font-weight:700">${i+1}</td>
       <td style="font-weight:600;color:var(--dark)">${esc(j.customerName||'—')}</td>
       <td style="white-space:nowrap;color:var(--mid)">${esc(startShort)}</td>
-      <td style="color:var(--mid);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(shortJob)}</td>
-      <td style="font-weight:700;color:var(--green)">${j.feeCharged ? '$'+j.feeCharged : '—'}</td>
+      <td style="color:var(--mid);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(shortJob)}</td>
+      <td style="font-weight:700;color:var(--red)">${j.feeCharged?'$'+j.feeCharged:'—'}</td>
     </tr>`;
   });
 
@@ -578,11 +400,9 @@ function renderResults(data) {
     <td>$${total.toFixed(0)}</td>
   </tr></tfoot></table></div></div>`;
 
-  // Section label
-  html += `<div class="section-label">Job Cards — scroll to view all</div>`;
-
   // Job cards
-  jobs.forEach((j, i) => {
+  html += `<div class="section-label">Job Cards</div>`;
+  jobs.forEach((j,i) => {
     html += `<div class="job-card">
       <div class="jc-header">
         <div>
@@ -594,74 +414,161 @@ function renderResults(data) {
       </div>
       <div class="jc-body">
         <div class="jc-time-row">
-          <div class="jc-time-cell">
-            <div class="jc-time-label">Start</div>
-            <div class="jc-time-val">${esc(j.start||'—')}</div>
-          </div>
-          <div class="jc-time-cell">
-            <div class="jc-time-label">Finish</div>
-            <div class="jc-time-val">${esc(j.finish||'—')}</div>
-          </div>
-          ${j.worker ? `<div class="jc-time-cell">
-            <div class="jc-time-label">Worker</div>
-            <div class="jc-time-val">${esc(j.worker)}</div>
-          </div>` : ''}
+          <div class="jc-time-cell"><div class="jc-time-label">Start</div><div class="jc-time-val">${esc(j.start||'—')}</div></div>
+          <div class="jc-time-cell"><div class="jc-time-label">Finish</div><div class="jc-time-val">${esc(j.finish||'—')}</div></div>
+          ${j.worker?`<div class="jc-time-cell"><div class="jc-time-label">Worker</div><div class="jc-time-val">${esc(j.worker)}</div></div>`:''}
         </div>
-        ${j.address ? `<div class="jc-field">
-          <div class="jc-field-label">📍 Address</div>
-          <div class="jc-field-val">${esc(j.address)}</div>
-        </div>` : ''}
-        ${j.jobDetails ? `<div class="jc-field">
-          <div class="jc-field-label">🔧 Job Details</div>
-          <div class="jc-details-box">${esc(j.jobDetails)}</div>
-        </div>` : ''}
-        ${j.handwrittenNotes ? `
-          <button class="notes-toggle" onclick="toggleNotes(this)">✏️ Handwritten Notes ▼</button>
-          <div class="hw-notes">${esc(j.handwrittenNotes)}</div>
-        ` : ''}
+        ${j.address?`<div class="jc-field"><div class="jc-field-label">📍 Address</div><div class="jc-field-val">${esc(j.address)}</div></div>`:''}
+        ${j.jobDetails?`<div class="jc-field"><div class="jc-field-label">🔧 Job Details</div><div class="jc-details-box">${esc(j.jobDetails)}</div></div>`:''}
         <div class="jc-notes-label">📝 Your Field Notes</div>
-        <textarea class="jc-notes-input" id="note_${i}" placeholder="What happened at this job? e.g. found activity in roof cavity, placed 2 bait stations…"></textarea>
+        <textarea class="jc-notes-input" id="note_${i}" placeholder="What happened at this job?">${esc(notes[i]||'')}</textarea>
       </div>
     </div>`;
   });
 
-  // Generate report button
-  html += `<div class="report-btn-wrap">
-    <button class="report-btn" id="reportBtn" onclick="generateReport()">
-      📋 Generate End-of-Day Report
+  // Report + clear buttons
+  html += `<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 8px;">
+    <button onclick="clearWeek()" style="width:100%;padding:14px;border-radius:14px;border:1px solid #e63329;background:transparent;color:#e63329;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">
+      🗑 Clear Entire Week & Start Fresh
     </button>
   </div>`;
 
   body.innerHTML = html;
 
-  // Re-attach stored notes if any
+  // Auto-save notes on input
   document.querySelectorAll('.jc-notes-input').forEach(ta => {
-    const idx = ta.getAttribute('data-job');
-    const saved = sessionStorage.getItem('note_' + idx);
-    if (saved) ta.value = saved;
-    ta.addEventListener('input', () => sessionStorage.setItem('note_' + idx, ta.value));
+    ta.addEventListener('input', saveNotes);
   });
 }
 
-function toggleNotes(btn) {
-  const notes = btn.nextElementSibling;
-  notes.classList.toggle('open');
-  btn.textContent = notes.classList.contains('open')
-    ? '✏️ Handwritten Notes ▲'
-    : '✏️ Handwritten Notes ▼';
+// ── SAVE / LOAD ────────────────────────────────────────────
+function saveNotes() {
+  if (!currentUser || !weekData[currentDay]) return;
+  const notes = {};
+  document.querySelectorAll('.jc-notes-input').forEach(ta => {
+    const idx = ta.id.replace('note_','');
+    notes[idx] = ta.value;
+  });
+  weekData[currentDay].notes = notes;
+  saveWeek();
 }
 
-// ── MANUAL ENTRY ──────────────────────────────────────────
-let manualJobCount = 0;
+function saveWeek() {
+  if (!currentUser) return;
+  localStorage.setItem('eap_week_' + currentUser, JSON.stringify(weekData));
+}
 
-function showManualEntry() {
-  show('manual-entry');
-  document.getElementById('manualJobsList').innerHTML = '';
+function clearDay(day) {
+  if (!confirm(`Clear all jobs for ${day}?`)) return;
+  delete weekData[day];
+  saveWeek();
+  buildTabs();
+  renderDay(day);
+  showToast(day + ' cleared');
+}
+
+function clearWeek() {
+  if (!confirm('Clear the entire week and start fresh? This cannot be undone.')) return;
+  weekData = {};
+  saveWeek();
+  currentDay = 'Monday';
+  buildTabs();
+  renderDay(currentDay);
+  showToast('Week cleared ✓');
+}
+
+// ── SCAN PDF ───────────────────────────────────────────────
+function triggerScan() {
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileInput').click();
+}
+
+function getApiKey() { return localStorage.getItem('eap_api_key') || ''; }
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Ask which day
+  const day = await pickDay('Which day is this job sheet for?');
+  if (!day) return;
+  currentDay = day;
+
+  document.getElementById('scanningOverlay').classList.remove('hidden');
+
+  try {
+    const isPdf = file.type === 'application/pdf';
+    let base64;
+    if (isPdf) {
+      base64 = await fileToBase64(file);
+    } else {
+      base64 = await compressImage(file);
+    }
+
+    const contentBlock = isPdf
+      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }
+      : { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } };
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-api-key': getApiKey(),
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    };
+    if (isPdf) headers['anthropic-beta'] = 'pdfs-2024-09-25';
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: [contentBlock, { type: 'text', text: `You are reading a job schedule sheet for Evict-A-Pest, a pest control company. The sheet is a printed table with these exact columns in order from left to right:
+1. Start (date + time)
+2. Finish (date + time)
+3. Customer Name
+4. Phone (may have D: daytime and M: mobile labels)
+5. Workers (technician first name)
+6. Status
+7. Fee Charged (dollar amount)
+8. Customer Details (the STREET ADDRESS of the job)
+9. Job Details (description of work)
+
+Return ONLY valid JSON, no markdown:
+{"date":"date shown e.g. 30/03/2026","handwrittenNotes":"any handwritten text not in table","jobs":[{"customerName":"","phone":"","address":"street address from Customer Details column NEVER a date","start":"time only e.g. 8:45 AM","finish":"time only e.g. 9:45 AM","worker":"","feeCharged":"number only e.g. 200","jobDetails":"","status":"","handwrittenNotes":""}]}
+
+CRITICAL: address = street address only, never a date. Start/finish = time only, strip the date. feeCharged = number only.` }] }]
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok || data.error) throw new Error(data.error?.message || 'API error');
+    const text = data.content.map(b => b.text||'').join('');
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON found');
+    const parsed = JSON.parse(match[0]);
+
+    if (!weekData[day]) weekData[day] = { jobs: [], notes: {}, date: parsed.date || '' };
+    else if (parsed.date) weekData[day].date = parsed.date;
+    weekData[day].jobs = [...(weekData[day].jobs || []), ...(parsed.jobs || [])];
+    if (parsed.handwrittenNotes) weekData[day].handwrittenNotes = parsed.handwrittenNotes;
+    saveWeek();
+    buildTabs();
+    switchDay(day);
+    showToast('Jobs added to ' + day + ' ✓');
+  } catch(err) {
+    alert('Error: ' + (err.message || 'Could not read sheet'));
+  }
+
+  document.getElementById('scanningOverlay').classList.add('hidden');
+});
+
+// ── MANUAL ENTRY ───────────────────────────────────────────
+function showManualModal() {
   manualJobCount = 0;
+  document.getElementById('manualJobsList').innerHTML = '';
+  document.getElementById('manualDate').value = new Date().toISOString().slice(0,10);
   addManualJob();
-  // Set today's date
-  const today = new Date().toISOString().slice(0,10);
-  document.getElementById('manualDate').value = today;
+  document.getElementById('manualModal').classList.remove('hidden');
 }
 
 function addManualJob() {
@@ -669,173 +576,210 @@ function addManualJob() {
   const i = manualJobCount;
   const div = document.createElement('div');
   div.className = 'manual-job-block';
-  div.id = 'manualJob_' + i;
+  div.id = 'mjb_' + i;
   div.innerHTML = `
-    <div class="manual-job-header">
-      <div class="manual-job-title">Job ${i}</div>
-      ${i > 1 ? '<button class="manual-job-remove" onclick="removeManualJob(' + i + ')">✕</button>' : ''}
+    <div class="manual-job-hdr">
+      <div class="manual-job-lbl">Job ${i}</div>
+      ${i>1?`<button class="rm-btn" onclick="document.getElementById('mjb_${i}').remove()">✕</button>`:''}
     </div>
-    <div class="manual-field"><label>Customer Name</label><input id="mj_name_${i}" placeholder="e.g. John Smith"></div>
-    <div class="manual-field"><label>Address</label><input id="mj_address_${i}" placeholder="e.g. 12 Smith St, Parramatta"></div>
-    <div class="manual-field"><label>Phone</label><input id="mj_phone_${i}" placeholder=""></div>
-    <div class="manual-row">
-      <div class="manual-field"><label>Start Time</label><input id="mj_start_${i}" type="time"></div>
-      <div class="manual-field"><label>Finish Time</label><input id="mj_finish_${i}" type="time"></div>
+    <div class="mf"><label>Customer Name</label><input id="mj_name_${i}" placeholder="e.g. John Smith"></div>
+    <div class="mf"><label>Address</label><input id="mj_addr_${i}" placeholder="e.g. 12 Smith St, Parramatta"></div>
+    <div class="mf"><label>Phone</label><input id="mj_phone_${i}"></div>
+    <div class="mf-row">
+      <div class="mf"><label>Start</label><input id="mj_start_${i}" type="time"></div>
+      <div class="mf"><label>Finish</label><input id="mj_finish_${i}" type="time"></div>
     </div>
-    <div class="manual-row">
-      <div class="manual-field"><label>Worker</label><input id="mj_worker_${i}" placeholder="e.g. Brad"></div>
-      <div class="manual-field"><label>Fee ($)</label><input id="mj_fee_${i}" placeholder="e.g. 200" type="number"></div>
+    <div class="mf-row">
+      <div class="mf"><label>Worker</label><input id="mj_worker_${i}" placeholder="Brad"></div>
+      <div class="mf"><label>Fee ($)</label><input id="mj_fee_${i}" type="number" placeholder="200"></div>
     </div>
-    <div class="manual-field"><label>Job Details</label><textarea id="mj_details_${i}" rows="2" placeholder="e.g. Termite Inspection $200 + GST"></textarea></div>
-  `;
+    <div class="mf"><label>Job Details</label><textarea id="mj_details_${i}" rows="2" placeholder="e.g. Termite Inspection $200 + GST"></textarea></div>`;
   document.getElementById('manualJobsList').appendChild(div);
 }
 
-function removeManualJob(i) {
-  const el = document.getElementById('manualJob_' + i);
-  if (el) el.remove();
-}
-
 function submitManualJobs() {
-  const date = document.getElementById('manualDate').value;
+  const dateVal = document.getElementById('manualDate').value;
+  const day = dateToDayName(dateVal);
   const jobs = [];
+
   for (let i = 1; i <= manualJobCount; i++) {
     const nameEl = document.getElementById('mj_name_' + i);
     if (!nameEl) continue;
     const name = nameEl.value.trim();
     if (!name) continue;
-    const startVal = document.getElementById('mj_start_' + i).value;
-    const finishVal = document.getElementById('mj_finish_' + i).value;
+    const sv = document.getElementById('mj_start_' + i).value;
+    const fv = document.getElementById('mj_finish_' + i).value;
     jobs.push({
       customerName: name,
-      address: document.getElementById('mj_address_' + i).value,
+      address: document.getElementById('mj_addr_' + i).value,
       phone: document.getElementById('mj_phone_' + i).value,
-      start: startVal ? formatTime(startVal) : '',
-      finish: finishVal ? formatTime(finishVal) : '',
+      start: sv ? fmt12(sv) : '',
+      finish: fv ? fmt12(fv) : '',
       worker: document.getElementById('mj_worker_' + i).value,
       feeCharged: document.getElementById('mj_fee_' + i).value,
       jobDetails: document.getElementById('mj_details_' + i).value,
       status: '', handwrittenNotes: ''
     });
   }
+
   if (jobs.length === 0) { alert('Add at least one job!'); return; }
-  renderResults({ date, jobs, handwrittenNotes: '' });
-  show('results');
+  if (!weekData[day]) weekData[day] = { jobs: [], notes: {}, date: dateVal };
+  weekData[day].jobs = [...(weekData[day].jobs||[]), ...jobs];
+  saveWeek();
+  closeModal('manualModal');
+  buildTabs();
+  switchDay(day);
+  showToast('Jobs added to ' + day + ' ✓');
 }
 
-function formatTime(t) {
+// ── DAY PICKER ─────────────────────────────────────────────
+function pickDay(prompt) {
+  return new Promise(resolve => {
+    const day = window.prompt(prompt + '\n\nType: Monday, Tuesday, Wednesday, Thursday or Friday');
+    if (!day) { resolve(null); return; }
+    const match = DAYS.find(d => d.toLowerCase().startsWith(day.toLowerCase().slice(0,3)));
+    resolve(match || 'Monday');
+  });
+}
+
+// ── REPORT GENERATION ──────────────────────────────────────
+async function generateReport(type) {
+  if (type === 'day') {
+    const dayD = weekData[currentDay];
+    if (!dayD || !dayD.jobs || dayD.jobs.length === 0) { showToast('No jobs for ' + currentDay); return; }
+    const notes = getNotesFromDOM();
+    const hasnotes = Object.values(notes).some(n => n.trim());
+    if (!hasnotes) { showToast('Add field notes first!'); return; }
+
+    document.getElementById('reportModalTitle').textContent = currentDay + ' Report';
+    document.getElementById('reportModal').classList.remove('hidden');
+    document.getElementById('reportContent').innerHTML = '<div class="generating-text">✍️ Writing report…</div>';
+    document.getElementById('copyBtn').style.display = 'none';
+
+    const summaries = dayD.jobs.map((j,i) => {
+      const note = (notes[i]||'').trim();
+      return note ? `Job ${i+1} (${j.customerName}): ${note}` : null;
+    }).filter(Boolean);
+
+    const prompt = 'Write a casual end-of-day report from Brad to his boss. Date: ' + (dayD.date || currentDay) + '. Based only on these notes: ' + summaries.join(' | ') + '. Conversational tone, plain text only, no bullet points or asterisks.';
+    reportText = await callClaude(prompt);
+    document.getElementById('reportContent').innerHTML = `<div class="report-text">${reportText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+    document.getElementById('copyBtn').style.display = 'block';
+
+  } else {
+    // Weekly report
+    const allDays = DAYS.filter(d => weekData[d] && weekData[d].jobs && weekData[d].jobs.length > 0);
+    if (allDays.length === 0) { showToast('No jobs loaded this week'); return; }
+
+    document.getElementById('reportModalTitle').textContent = 'Weekly Report';
+    document.getElementById('reportModal').classList.remove('hidden');
+    document.getElementById('reportContent').innerHTML = '<div class="generating-text">✍️ Writing weekly report…</div>';
+    document.getElementById('copyBtn').style.display = 'none';
+
+    saveNotes();
+    let weekSummary = [];
+    allDays.forEach(day => {
+      const dayD = weekData[day];
+      const notes = dayD.notes || {};
+      const dayNotes = dayD.jobs.map((j,i) => {
+        const note = (notes[i]||'').trim();
+        return note ? `${j.customerName}: ${note}` : `${j.customerName}: (no notes)`;
+      });
+      weekSummary.push(day + ' — ' + dayNotes.join('; '));
+    });
+
+    const total = allDays.reduce((s,d) => s + (weekData[d].jobs||[]).reduce((ss,j) => ss+(parseFloat(j.feeCharged)||0),0), 0);
+    const totalJobs = allDays.reduce((s,d) => s + (weekData[d].jobs||[]).length, 0);
+
+    const prompt = 'Write a casual weekly work summary from Brad to his boss. ' + totalJobs + ' jobs completed this week totalling $' + total + '. Daily breakdown: ' + weekSummary.join(' | ') + '. Keep it friendly and concise. Plain text only, no bullet points or asterisks.';
+    reportText = await callClaude(prompt);
+    document.getElementById('reportContent').innerHTML = `<div class="report-text">${reportText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+    document.getElementById('copyBtn').style.display = 'block';
+  }
+}
+
+function getNotesFromDOM() {
+  const notes = {};
+  document.querySelectorAll('.jc-notes-input').forEach(ta => {
+    notes[ta.id.replace('note_','')] = ta.value;
+  });
+  return notes;
+}
+
+async function callClaude(prompt) {
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-5-20250929', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await response.json();
+    return data.content.map(b => b.text||'').join('');
+  } catch(e) { return 'Error generating report. Try again.'; }
+}
+
+async function copyReport() {
+  if (!reportText) return;
+  try { await navigator.clipboard.writeText(reportText); } catch(e) { const ta = document.createElement('textarea'); ta.value = reportText; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = '✅ Copied!'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '📋 Copy to Clipboard'; btn.classList.remove('copied'); }, 2000);
+}
+
+// ── HELPERS ────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function dateToDayName(dateStr) {
+  if (!dateStr) return 'Monday';
+  const d = new Date(dateStr + 'T12:00:00');
+  const names = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const name = names[d.getDay()];
+  return DAYS.includes(name) ? name : 'Monday';
+}
+
+function fmt12(t) {
   if (!t) return '';
-  const [h, m] = t.split(':');
+  const [h,m] = t.split(':');
   const hr = parseInt(h);
-  return (hr > 12 ? hr-12 : hr || 12) + ':' + m + ' ' + (hr >= 12 ? 'PM' : 'AM');
+  return (hr>12?hr-12:hr||12)+':'+m+' '+(hr>=12?'PM':'AM');
+}
+
+function fileToBase64(file) {
+  return new Promise((res,rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
+}
+
+function compressImage(file, maxWidth=2400, quality=0.92) {
+  return new Promise((res,rej) => {
+    const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth/img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width*scale; canvas.height = img.height*scale;
+      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); }, 'image/jpeg', quality);
+    };
+    img.onerror = rej; img.src = url;
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
 function esc(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-let reportText = '';
-
-async function generateReport() {
-  const btn = document.getElementById('reportBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Generating…';
-
-  // Collect all job notes
-  const notes = document.querySelectorAll('.jc-notes-input');
-  const jobCards = document.querySelectorAll('.job-card');
-  const date = document.getElementById('sheetDate').textContent || 'today';
-
-  let jobSummaries = [];
-  jobCards.forEach((card, i) => {
-    const name = card.querySelector('.jc-name')?.textContent || 'Unknown';
-    const noteEl = document.getElementById('note_' + i);
-    const fieldNote = noteEl ? noteEl.value.trim() : '';
-    if (fieldNote) {
-      jobSummaries.push('Job ' + (i+1) + ' (' + name + '): ' + fieldNote);
-    }
-  });
-
-  if (jobSummaries.length === 0) {
-    document.getElementById('reportModal').classList.remove('hidden');
-    document.getElementById('reportContent').innerHTML = '<div class="generating-text">Add some field notes to at least one job first!</div>';
-    document.getElementById('copyBtn').style.display = 'none';
-    btn.disabled = false;
-    btn.innerHTML = '📋 Generate End-of-Day Report';
-    return;
+// Check API key on load
+window.addEventListener('load', () => {
+  if (!getApiKey()) {
+    const key = prompt('Enter your Anthropic API key (sk-ant-...):');
+    if (key && key.startsWith('sk-ant-')) localStorage.setItem('eap_api_key', key);
   }
-
-  const prompt = 'You are writing a casual end-of-day work report for a pest control technician named Brad to send to his boss. Date: ' + date + '. Write a short, casual but clear summary based ONLY on these field notes Brad wrote today: ' + jobSummaries.join(' | ') + '. Keep it conversational — like a message from Brad to his boss. Plain text only, no bullet points, no asterisks, no formatting symbols. Just a few short paragraphs covering what happened at each job.';
-
-  document.getElementById('reportModal').classList.remove('hidden');
-  document.getElementById('reportContent').innerHTML = '<div class="generating-text">✍️ Writing your report…</div>';
-  document.getElementById('copyBtn').style.display = 'none';
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': getApiKey(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    const data = await response.json();
-    reportText = data.content.map(b => b.text || '').join('');
-    document.getElementById('reportContent').innerHTML = `<div class="report-text">${reportText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
-    document.getElementById('copyBtn').style.display = 'flex';
-  } catch(err) {
-    document.getElementById('reportContent').innerHTML = '<div class="generating-text">Something went wrong. Try again.</div>';
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '📋 Generate End-of-Day Report';
-}
-
-function closeModal() {
-  document.getElementById('reportModal').classList.add('hidden');
-}
-
-async function copyReport() {
-  if (!reportText) return;
-  try {
-    await navigator.clipboard.writeText(reportText);
-    const btn = document.getElementById('copyBtn');
-    btn.textContent = '✅ Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.innerHTML = '📋 Copy to Clipboard'; btn.classList.remove('copied'); }, 2000);
-  } catch(e) {
-    // Fallback
-    const ta = document.createElement('textarea');
-    ta.value = reportText;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-  }
-}
+});
 </script>
-<!-- Report Modal -->
-<div id="reportModal" class="modal-overlay hidden">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">📋 End-of-Day Report</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="reportContent"><div class="generating-text">✍️ Writing your report…</div></div>
-    </div>
-    <div class="modal-footer">
-      <button class="copy-btn" id="copyBtn" onclick="copyReport()">📋 Copy to Clipboard</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
