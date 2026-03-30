@@ -402,6 +402,7 @@ function renderDay(day) {
   // Job cards
   html += `<div class="section-label">Job Cards</div>`;
   jobs.forEach((j,i) => {
+    const mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(j.address || '');
     html += `<div class="job-card">
       <div class="jc-header">
         <div>
@@ -417,7 +418,7 @@ function renderDay(day) {
           <div class="jc-time-cell"><div class="jc-time-label">Finish</div><div class="jc-time-val">${esc(j.finish||'—')}</div></div>
           ${j.worker?`<div class="jc-time-cell"><div class="jc-time-label">Worker</div><div class="jc-time-val">${esc(j.worker)}</div></div>`:''}
         </div>
-        ${j.address?`<div class="jc-field"><div class="jc-field-label">📍 Address</div><div class="jc-field-val">${esc(j.address)}</div></div>`:''}
+        ${j.address?`<div class="jc-field"><div class="jc-field-label">📍 Address</div><div class="jc-field-val"><a href="${mapsUrl}" target="_blank" style="color:var(--red);text-decoration:none;font-weight:600;">${esc(j.address)} ↗</a></div></div>`:''}
         ${j.jobDetails?`<div class="jc-field"><div class="jc-field-label">🔧 Job Details</div><div class="jc-details-box">${esc(j.jobDetails)}</div></div>`:''}
         <div class="jc-notes-label">📝 Your Field Notes</div>
         <textarea class="jc-notes-input" id="note_${i}" placeholder="What happened at this job?">${esc(notes[i]||'')}</textarea>
