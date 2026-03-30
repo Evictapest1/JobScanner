@@ -450,7 +450,7 @@ function renderDay(day) {
           <div class="jc-time-cell"><div class="jc-time-label">Finish</div><div class="jc-time-val">${esc(j.finish||'—')}</div></div>
           ${j.worker?`<div class="jc-time-cell"><div class="jc-time-label">Worker</div><div class="jc-time-val">${esc(j.worker)}</div></div>`:''}
         </div>
-        ${j.address?`<div class="jc-field"><div class="jc-field-label">📍 Address</div><div class="jc-field-val"><a href="${mapsUrl}" target="_blank" style="color:var(--red);text-decoration:none;font-weight:600;">${esc(j.address)} ↗</a></div></div>`:''}
+        ${j.address?('<div class="jc-field"><div class="jc-field-label">📍 Address</div><div class="jc-field-val" onclick="showNavPicker(this)" data-address="'+esc(j.address)+'" style="color:var(--red);font-weight:600;cursor:pointer;">'+esc(j.address)+' ↗</div></div>'):''}
         ${j.jobDetails?`<div class="jc-field"><div class="jc-field-label">🔧 Job Details</div><div class="jc-details-box">${esc(j.jobDetails)}</div></div>`:''}
         <div class="jc-notes-label">📝 Your Field Notes</div>
         <textarea class="jc-notes-input" id="note_${i}" placeholder="What happened at this job?">${esc(notes[i]||'')}</textarea>
@@ -803,9 +803,9 @@ function showToast(msg) {
 
 let navAddress = '';
 
-function showNavPicker(address) {
-  navAddress = address;
-  document.getElementById('navPickerAddress').textContent = address;
+function showNavPicker(el) {
+  navAddress = el.getAttribute('data-address');
+  document.getElementById('navPickerAddress').textContent = navAddress;
   document.getElementById('navPicker').classList.remove('hidden');
 }
 
