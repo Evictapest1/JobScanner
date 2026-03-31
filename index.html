@@ -191,6 +191,24 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(
 
 .hidden { display: none !important; }
 
+/* GPS tracking */
+.gps-row { display: flex; gap: 8px; margin-top: 10px; }
+.gps-btn {
+  flex: 1; padding: 10px 8px; border-radius: 10px; border: none;
+  font-size: 13px; font-weight: 700; font-family: 'DM Sans',sans-serif;
+  cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.gps-btn.arrive { background: #16a34a; color: #fff; }
+.gps-btn.depart { background: #e63329; color: #fff; }
+.gps-btn.done { background: #e2e8f0; color: #64748b; cursor: default; }
+.gps-stamp {
+  margin-top: 8px; padding: 8px 12px; border-radius: 8px;
+  font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+}
+.gps-stamp.arrived { background: #dcfce7; color: #16a34a; }
+.gps-stamp.departed { background: #fde8e8; color: #e63329; }
+.gps-stamp.warning { background: #fef9c3; color: #854d0e; }
+
 /* Nav picker */
 .nav-picker { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; display: flex; align-items: flex-end; }
 .nav-picker-sheet { background: #fff; width: 100%; border-radius: 24px 24px 0 0; padding: 20px 16px 40px; }
@@ -433,6 +451,7 @@ function renderDay(day) {
   </tr></tfoot></table></div></div>`;
 
   // Job cards
+  const gpsData = (weekData[currentDay] && weekData[currentDay].gps) ? weekData[currentDay].gps : {};
   html += `<div class="section-label">Job Cards</div>`;
   jobs.forEach((j,i) => {
     html += `<div class="job-card">
@@ -454,6 +473,8 @@ function renderDay(day) {
         ${j.jobDetails?`<div class="jc-field"><div class="jc-field-label">🔧 Job Details</div><div class="jc-details-box">${esc(j.jobDetails)}</div></div>`:''}
         <div class="jc-notes-label">📝 Your Field Notes</div>
         <textarea class="jc-notes-input" id="note_${i}" placeholder="What happened at this job?">${esc(notes[i]||'')}</textarea>
+        <div class="gps-row" id="gps_row_${i}"></div>
+        <div id="gps_stamp_${i}"></div>
       </div>
     </div>`;
   });
@@ -470,6 +491,11 @@ function renderDay(day) {
   // Auto-save notes on input
   document.querySelectorAll('.jc-notes-input').forEach(ta => {
     ta.addEventListener('input', saveNotes);
+  });
+
+  // Render GPS buttons after DOM is ready
+  jobs.forEach((j, i) => {
+    renderGpsButtons(i, j.address || '');
   });
 }
 
@@ -817,6 +843,121 @@ function openNav(app) {
   if (app === 'google') url = 'https://maps.google.com/?q=' + enc;
   window.location.href = url;
   document.getElementById('navPicker').classList.add('hidden');
+}
+
+// ── GPS TRACKING ──────────────────────────────────────────
+function renderGpsButtons(i, address) {
+  const gps = weekData[currentDay] && weekData[currentDay].gps ? weekData[currentDay].gps[i] : null;
+  const row = document.getElementById('gps_row_' + i);
+  const stamp = document.getElementById('gps_stamp_' + i);
+  if (!row || !stamp) return;
+
+  // Render buttons
+  row.innerHTML = '';
+  if (!gps || !gps.arrived) {
+    const btn = document.createElement('button');
+    btn.className = 'gps-btn arrive';
+    btn.textContent = "📍 I'm Here";
+    btn.onclick = () => logArrival(i, address);
+    row.appendChild(btn);
+  } else if (!gps.departed) {
+    const btn = document.createElement('button');
+    btn.className = 'gps-btn depart';
+    btn.textContent = '🚗 Job Done';
+    btn.onclick = () => logDeparture(i);
+    row.appendChild(btn);
+  }
+
+  // Render stamps
+  stamp.innerHTML = '';
+  if (gps && gps.arrived) {
+    const d1 = document.createElement('div');
+    d1.className = 'gps-stamp ' + (gps.onTime ? 'arrived' : 'warning');
+    d1.textContent = '✓ Arrived ' + gps.arrivedTime + (gps.onTime ? ' — On Time ✓' : ' — ' + gps.distanceM + 'm from address');
+    stamp.appendChild(d1);
+  }
+  if (gps && gps.departed) {
+    const d2 = document.createElement('div');
+    d2.className = 'gps-stamp departed';
+    d2.textContent = '✓ Departed ' + gps.departedTime;
+    stamp.appendChild(d2);
+  }
+}
+
+
+const GOOGLE_GEO_KEY = 'AIzaSyD5w8LODRajBDsfBoZ5kem7e0aKwGoGMlM';
+const MAX_DISTANCE_M = 50;
+
+function getDistanceM(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+    Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function nowTime() {
+  const d = new Date();
+  const h = d.getHours(); const m = String(d.getMinutes()).padStart(2,'0');
+  return (h>12?h-12:h||12)+':'+m+' '+(h>=12?'PM':'AM');
+}
+
+async function logArrival(jobIndex, address) {
+  const btn = document.querySelector(`button.gps-btn.arrive[onclick*="logArrival(${jobIndex}"]`);
+  if (btn) { btn.textContent = '📍 Getting GPS…'; btn.disabled = true; }
+
+  try {
+    // Get current position
+    const pos = await new Promise((res, rej) => {
+      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 });
+    });
+    const { latitude: myLat, longitude: myLon } = pos.coords;
+
+    // Geocode the job address
+    const geoRes = await fetch(
+      'https://maps.googleapis.com/maps/api/geocode/json?address=' +
+      encodeURIComponent(address + ', Australia') + '&key=' + GOOGLE_GEO_KEY
+    );
+    const geoData = await geoRes.json();
+
+    if (!geoData.results || geoData.results.length === 0) throw new Error('Address not found');
+
+    const { lat: jobLat, lng: jobLon } = geoData.results[0].geometry.location;
+    const distM = Math.round(getDistanceM(myLat, myLon, jobLat, jobLon));
+    const onTime = distM <= MAX_DISTANCE_M;
+    const arrivedTime = nowTime();
+
+    // Save to weekData
+    if (!weekData[currentDay].gps) weekData[currentDay].gps = {};
+    weekData[currentDay].gps[jobIndex] = {
+      arrived: true, arrivedTime, onTime, distanceM: distM,
+      myLat, myLon, jobLat, jobLon
+    };
+    saveWeek();
+
+    renderGpsButtons(jobIndex, address);
+    showToast(onTime ? 'Arrival logged ✓' : 'Arrival logged — ' + distM + 'm from address');
+
+  } catch(err) {
+    showToast('GPS error: ' + (err.message || 'Could not get location'));
+    if (btn) { btn.textContent = "📍 I'm Here"; btn.disabled = false; }
+  }
+}
+
+function logDeparture(jobIndex) {
+  const departedTime = nowTime();
+  if (!weekData[currentDay].gps) weekData[currentDay].gps = {};
+  if (!weekData[currentDay].gps[jobIndex]) weekData[currentDay].gps[jobIndex] = {};
+  weekData[currentDay].gps[jobIndex].departed = true;
+  weekData[currentDay].gps[jobIndex].departedTime = departedTime;
+  saveWeek();
+
+  // Get address from job data
+  const jobs2 = weekData[currentDay] && weekData[currentDay].jobs ? weekData[currentDay].jobs : [];
+  const addr2 = jobs2[jobIndex] ? jobs2[jobIndex].address || '' : '';
+  renderGpsButtons(jobIndex, addr2);
+  showToast('Departure logged ✓');
 }
 
 function esc(str) {
