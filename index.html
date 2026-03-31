@@ -714,13 +714,32 @@ async function generateReport(type) {
     document.getElementById('reportContent').innerHTML = '<div class="generating-text">✍️ Writing report…</div>';
     document.getElementById('copyBtn').style.display = 'none';
 
-    const summaries = dayD.jobs.map((j,i) => {
-      const note = (notes[i]||'').trim();
-      return note ? `Job ${i+1} (${j.customerName}): ${note}` : null;
-    }).filter(Boolean);
+    const gpsD = dayD.gps || {};
+    const total = dayD.jobs.reduce((s,j) => s+(parseFloat(j.feeCharged)||0),0);
 
-    const prompt = 'Write a casual end-of-day report from Brad to his boss. Date: ' + (dayD.date || currentDay) + '. Based only on these notes: ' + summaries.join(' | ') + '. Conversational tone, plain text only, no bullet points or asterisks.';
-    reportText = await callClaude(prompt);
+    // Build structured job data - no AI needed, just format directly
+    const date = dayD.date || currentDay;
+    let report = 'Daily Summary — ' + date + '\n';
+    report += '─────────────────────\n\n';
+
+    dayD.jobs.forEach((j,i) => {
+      const note = (notes[i]||'').trim();
+      const g = gpsD[i];
+      report += '• ' + (j.customerName||'—') + ' — ' + (j.address||'—') + '\n';
+      if (g && g.arrivedTime) {
+        report += '  Arrived: ' + g.arrivedTime;
+        report += g.onTime ? ' ✓ On Time' : ' ⚠ ' + g.distanceM + 'm from address';
+        if (g.departedTime) report += '  |  Departed: ' + g.departedTime;
+        report += '\n';
+      }
+      if (note) report += '  ' + note + '\n';
+      report += '\n';
+    });
+
+    report += '─────────────────────\n';
+    report += 'Total: $' + total.toFixed(0) + ' | ' + dayD.jobs.length + ' job' + (dayD.jobs.length !== 1 ? 's' : '');
+
+    reportText = report;
     document.getElementById('reportContent').innerHTML = `<div class="report-text">${reportText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
     document.getElementById('copyBtn').style.display = 'block';
 
